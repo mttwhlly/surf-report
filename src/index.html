@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surf Conditions</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Real-time surf conditions with wave visualization">
+    <meta name="theme-color" content="#0077cc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Surf Conditions">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="location" id="location">Loading...</div>
+            <div class="timestamp" id="timestamp"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Loading surf conditions...</div>
+        </div>
+
+        <div class="error" id="error">
+            Failed to load surf conditions. Please try again.
+        </div>
+
+        <div id="surfData" style="display: none;">
+            <div class="status-card">
+                <div class="rating" id="rating">-</div>
+                <div class="score" id="score">0</div>
+                <div class="duration" id="duration">-</div>
+            </div>
+
+            <div class="wave-container">
+                <canvas id="waveCanvas"></canvas>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Wave Height</div>
+                    <div class="detail-value" id="waveHeight">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Period</div>
+                    <div class="detail-value" id="wavePeriod">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Wind Speed</div>
+                    <div class="detail-value" id="windSpeed">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tide</div>
+                    <div class="detail-value" id="tideState">-</div>
+                </div>
+            </div>
+
+            <div class="notification-controls">
+                <button class="btn" id="notificationBtn">
+                    Enable Notifications
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" id="refreshBtn" title="Refresh">
+        ↻
+    </button>
+
+    <!-- Scripts -->
+    <script src="js/waves.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
