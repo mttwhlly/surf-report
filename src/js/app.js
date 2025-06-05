@@ -61,7 +61,10 @@ class SurfApp {
         // Handle window resize for canvas
         window.addEventListener('resize', () => {
             if (this.surfData && this.waveAnimation) {
-                setTimeout(() => this.waveAnimation.resize(), 100);
+                setTimeout(() => {
+                    this.waveAnimation.resize();
+                    this.waveAnimation.setupCanvas();
+                }, 100);
             }
         });
     }
@@ -83,7 +86,8 @@ class SurfApp {
                 cache: 'no-cache',
                 headers: {
                     'Accept': 'application/json',
-                }
+                },
+                mode: 'cors'
             });
 
             clearTimeout(timeoutId);
@@ -99,10 +103,47 @@ class SurfApp {
 
         } catch (error) {
             console.error('Error fetching surf data:', error);
-            this.showError(this.getErrorMessage(error));
+            
+            // Check if it's a CORS or network error
+            if (error.message.includes('CORS') || 
+                error.message.includes('Failed to fetch') || 
+                error.name === 'TypeError') {
+                this.handleCORSError();
+            } else {
+                this.showError(this.getErrorMessage(error));
+            }
         } finally {
             this.showLoading(false);
         }
+    }
+
+    handleCORSError() {
+        console.log('API blocked by CORS, loading demo data...');
+        this.loadDemoData();
+        this.showMessage('Using demo data - API has CORS restrictions');
+    }
+
+    loadDemoData() {
+        this.surfData = {
+            location: "St. Augustine, FL",
+            timestamp: new Date().toISOString(),
+            surfable: true,
+            rating: "Marginal",
+            score: 45,
+            goodSurfDuration: "Demo mode - API temporarily unavailable",
+            details: {
+                wave_height_ft: 1.5,
+                wave_period_sec: 6,
+                swell_direction_deg: 90,
+                wind_direction_deg: 117,
+                wind_speed_kts: 22.9,
+                tide_state: "High",
+                data_source: "Demo data"
+            }
+        };
+        
+        this.updateUI();
+        this.startWaveAnimation();
     }
 
     getErrorMessage(error) {
@@ -119,7 +160,9 @@ class SurfApp {
         if (!this.surfData) return;
 
         const surfDataEl = document.getElementById('surfData');
-        surfDataEl.style.display = 'block';
+        if (surfDataEl) {
+            surfDataEl.style.display = 'block';
+        }
 
         // Update header
         this.updateElement('location', this.surfData.location);
@@ -143,44 +186,63 @@ class SurfApp {
 
     updateRating() {
         const rating = document.getElementById('rating');
-        if (rating) {
+        if (rating && this.surfData) {
             rating.textContent = this.surfData.rating;
             rating.className = `rating ${this.surfData.rating.toLowerCase()}`;
         }
     }
 
     updateDetails() {
+        if (!this.surfData || !this.surfData.details) return;
+        
         const details = this.surfData.details;
-        this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
-        this.updateElement('wavePeriod', `${details.wave_period_sec} sec`);
-        this.updateElement('windSpeed', `${Math.round(details.wind_speed_kts)} kts`);
-        this.updateElement('tideState', details.tide_state);
+        this.updateElement('waveHeight', `${details.wave_height_ft || 0} ft`);
+        this.updateElement('wavePeriod', `${details.wave_period_sec || 0} sec`);
+        this.updateElement('windSpeed', `${Math.round(details.wind_speed_kts || 0)} kts`);
+        this.updateElement('tideState', details.tide_state || 'Unknown');
     }
 
     formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        });
+        try {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (error) {
+            console.error('Error formatting timestamp:', error);
+            return 'Unknown time';
+        }
     }
 
     startWaveAnimation() {
-        if (!this.surfData) return;
-
         const canvas = document.getElementById('waveCanvas');
-        if (!canvas) return;
-
-        if (this.waveAnimation) {
-            this.waveAnimation.destroy();
+        if (!canvas) {
+            console.warn('Wave canvas not found');
+            return;
         }
 
-        this.waveAnimation = new WaveAnimation(canvas, this.surfData.details);
-        this.waveAnimation.start();
+        try {
+            if (this.waveAnimation) {
+                this.waveAnimation.destroy();
+            }
+
+            const waveData = this.surfData?.details || {
+                wave_height_ft: 2,
+                wave_period_sec: 8,
+                swell_direction_deg: 180,
+                wind_speed_kts: 15
+            };
+
+            this.waveAnimation = new WaveAnimation(canvas, waveData);
+            this.waveAnimation.start();
+        } catch (error) {
+            console.error('Error starting wave animation:', error);
+        }
     }
 
     async toggleNotifications() {
@@ -192,14 +254,19 @@ class SurfApp {
         }
 
         if (!this.notificationsEnabled) {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                this.notificationsEnabled = true;
-                this.updateNotificationButton(true);
-                this.saveNotificationPreference();
-                this.showMessage('Notifications enabled! You\'ll be alerted when conditions are good.');
-            } else {
-                this.showMessage('Notifications permission denied');
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    this.notificationsEnabled = true;
+                    this.updateNotificationButton(true);
+                    this.saveNotificationPreference();
+                    this.showMessage('Notifications enabled! You\'ll be alerted when conditions are good.');
+                } else {
+                    this.showMessage('Notifications permission denied');
+                }
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+                this.showMessage('Error enabling notifications');
             }
         } else {
             this.notificationsEnabled = false;
@@ -218,21 +285,30 @@ class SurfApp {
     }
 
     loadNotificationPreference() {
-        const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
-        if (enabled && Notification.permission === 'granted') {
-            this.notificationsEnabled = true;
-            this.updateNotificationButton(true);
+        try {
+            const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
+            if (enabled && 'Notification' in window && Notification.permission === 'granted') {
+                this.notificationsEnabled = true;
+                this.updateNotificationButton(true);
+            }
+        } catch (error) {
+            console.warn('localStorage not available:', error);
         }
     }
 
     saveNotificationPreference() {
-        localStorage.setItem('surf-notifications-enabled', this.notificationsEnabled.toString());
+        try {
+            localStorage.setItem('surf-notifications-enabled', this.notificationsEnabled.toString());
+        } catch (error) {
+            console.warn('Cannot save to localStorage:', error);
+        }
     }
 
     checkForGoodConditions() {
         if (!this.notificationsEnabled || !this.surfData) return;
 
-        const isGoodConditions = this.surfData.score >= 70 || this.surfData.rating.toLowerCase() === 'good';
+        const isGoodConditions = this.surfData.score >= 70 || 
+                               this.surfData.rating.toLowerCase() === 'good';
         
         if (isGoodConditions) {
             this.sendNotification();
@@ -240,28 +316,34 @@ class SurfApp {
     }
 
     sendNotification() {
-        if (!this.notificationsEnabled || Notification.permission !== 'granted') return;
+        if (!this.notificationsEnabled || 
+            !('Notification' in window) || 
+            Notification.permission !== 'granted') return;
 
-        const lastNotification = localStorage.getItem('surf-last-notification');
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
+        try {
+            const lastNotification = localStorage.getItem('surf-last-notification');
+            const now = Date.now();
+            const oneHour = 60 * 60 * 1000;
 
-        // Don't spam notifications - only send once per hour
-        if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
-            return;
+            // Don't spam notifications - only send once per hour
+            if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
+                return;
+            }
+
+            new Notification('Great Surf Conditions! 🏄‍♂️', {
+                body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
+                icon: '/icons/icon-192.png',
+                badge: '/icons/icon-96.png',
+                vibrate: [200, 100, 200, 100, 200],
+                tag: 'surf-conditions',
+                requireInteraction: false,
+                silent: false
+            });
+
+            localStorage.setItem('surf-last-notification', now.toString());
+        } catch (error) {
+            console.error('Error sending notification:', error);
         }
-
-        new Notification('Great Surf Conditions! 🏄‍♂️', {
-            body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
-            icon: '/icons/icon-192.png',
-            badge: '/icons/icon-96.png',
-            vibrate: [200, 100, 200, 100, 200],
-            tag: 'surf-conditions',
-            requireInteraction: false,
-            silent: false
-        });
-
-        localStorage.setItem('surf-last-notification', now.toString());
     }
 
     showLoading(show) {
@@ -307,7 +389,9 @@ class SurfApp {
 
         document.body.appendChild(toast);
         setTimeout(() => {
-            toast.remove();
+            if (toast.parentNode) {
+                toast.remove();
+            }
         }, 3000);
     }
 
@@ -358,7 +442,11 @@ class SurfApp {
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new SurfApp();
+    try {
+        new SurfApp();
+    } catch (error) {
+        console.error('Error initializing app:', error);
+    }
 });
 
 // Add CSS for toast animation

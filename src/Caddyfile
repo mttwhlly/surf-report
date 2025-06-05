@@ -1,5 +1,5 @@
 https://localhost:8444 {
-  root * .
-  file_server
-  tls internal
+	root * .
+	file_server
+	tls internal
 }
