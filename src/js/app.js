@@ -280,7 +280,7 @@ class SurfApp {
         const btn = document.getElementById('notificationBtn');
         if (btn) {
             btn.textContent = enabled ? 'Notifications Enabled ✓' : 'Enable Notifications';
-            btn.style.background = enabled ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.2)';
+            // btn.style.background = enabled ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.2)';
         }
     }
 
