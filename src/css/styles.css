@@ -23,6 +23,10 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+.title {
+    font-weight: unset;
+}
+
 /* Top control bar for buttons */
 .top-controls {
     position: fixed;
