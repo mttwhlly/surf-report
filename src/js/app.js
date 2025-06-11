@@ -42,10 +42,10 @@ class SurfApp {
 
     setupEventListeners() {
         const refreshBtn = document.getElementById('refreshBtn');
-        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationCheckbox = document.getElementById('notificationCheckbox');
 
         refreshBtn?.addEventListener('click', () => this.fetchSurfData());
-        notificationBtn?.addEventListener('click', () => this.toggleNotifications());
+        notificationCheckbox?.addEventListener('click', () => this.toggleNotifications());
 
         // Handle online/offline events
         window.addEventListener('online', () => this.fetchSurfData());
@@ -61,10 +61,7 @@ class SurfApp {
         // Handle window resize for canvas
         window.addEventListener('resize', () => {
             if (this.surfData && this.waveAnimation) {
-                setTimeout(() => {
-                    this.waveAnimation.resize();
-                    this.waveAnimation.setupCanvas();
-                }, 100);
+                setTimeout(() => this.waveAnimation.resize(), 100);
             }
         });
     }
@@ -86,8 +83,7 @@ class SurfApp {
                 cache: 'no-cache',
                 headers: {
                     'Accept': 'application/json',
-                },
-                mode: 'cors'
+                }
             });
 
             clearTimeout(timeoutId);
@@ -103,47 +99,10 @@ class SurfApp {
 
         } catch (error) {
             console.error('Error fetching surf data:', error);
-            
-            // Check if it's a CORS or network error
-            if (error.message.includes('CORS') || 
-                error.message.includes('Failed to fetch') || 
-                error.name === 'TypeError') {
-                this.handleCORSError();
-            } else {
-                this.showError(this.getErrorMessage(error));
-            }
+            this.showError(this.getErrorMessage(error));
         } finally {
             this.showLoading(false);
         }
-    }
-
-    handleCORSError() {
-        console.log('API blocked by CORS, loading demo data...');
-        this.loadDemoData();
-        this.showMessage('Using demo data - API has CORS restrictions');
-    }
-
-    loadDemoData() {
-        this.surfData = {
-            location: "St. Augustine, FL",
-            timestamp: new Date().toISOString(),
-            surfable: true,
-            rating: "Marginal",
-            score: 45,
-            goodSurfDuration: "Demo mode - API temporarily unavailable",
-            details: {
-                wave_height_ft: 1.5,
-                wave_period_sec: 6,
-                swell_direction_deg: 90,
-                wind_direction_deg: 117,
-                wind_speed_kts: 22.9,
-                tide_state: "High",
-                data_source: "Demo data"
-            }
-        };
-        
-        this.updateUI();
-        this.startWaveAnimation();
     }
 
     getErrorMessage(error) {
@@ -160,9 +119,7 @@ class SurfApp {
         if (!this.surfData) return;
 
         const surfDataEl = document.getElementById('surfData');
-        if (surfDataEl) {
-            surfDataEl.style.display = 'block';
-        }
+        surfDataEl.style.display = 'block';
 
         // Update header
         this.updateElement('location', this.surfData.location);
@@ -173,7 +130,7 @@ class SurfApp {
         this.updateElement('score', this.surfData.score);
         this.updateElement('duration', this.surfData.goodSurfDuration);
 
-        // Update details
+        // Update details with direction arrows
         this.updateDetails();
     }
 
@@ -186,129 +143,157 @@ class SurfApp {
 
     updateRating() {
         const rating = document.getElementById('rating');
-        if (rating && this.surfData) {
+        if (rating) {
             rating.textContent = this.surfData.rating;
             rating.className = `rating ${this.surfData.rating.toLowerCase()}`;
         }
     }
 
-    updateDetails() {
-        if (!this.surfData || !this.surfData.details) return;
+    // Convert degrees to compass direction
+    getCompassDirection(degrees) {
+        const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        const index = Math.round(degrees / 22.5) % 16;
+        return directions[index];
+    }
+
+    // Create direction arrow using Degular font character
+    createDirectionArrow(degrees, isSwellDirection = false) {
+        const arrow = document.createElement('span');
+        arrow.textContent = '→';
+        arrow.style.fontFamily = 'DegularDisplay, sans-serif';
+        arrow.style.fontSize = '1em';
+        arrow.style.display = 'inline-block';
+        arrow.style.marginLeft = '6px';
+        arrow.style.color = '#000';
+        arrow.style.transition = 'all 0.3s ease';
         
+        // For swell direction: arrow points where swell is COMING FROM
+        // For wind direction: arrow points where wind is COMING FROM
+        // Both show source direction, so we need to rotate 180° from the given direction
+        const rotationDegrees = degrees + 90;
+        arrow.style.transform = `rotate(${rotationDegrees}deg)`;
+        arrow.style.transformOrigin = 'center';
+        
+        return arrow;
+    }
+
+    updateDetails() {
         const details = this.surfData.details;
-        this.updateElement('waveHeight', `${details.wave_height_ft || 0} ft`);
-        this.updateElement('wavePeriod', `${details.wave_period_sec || 0} sec`);
-        this.updateElement('windSpeed', `${Math.round(details.wind_speed_kts || 0)} kts`);
-        this.updateElement('tideState', details.tide_state || 'Unknown');
+        
+        // Wave Height (no direction needed)
+        this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
+        
+        // Wave Period with swell direction arrow
+        const wavePeriodEl = document.getElementById('wavePeriod');
+        if (wavePeriodEl) {
+            wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
+            // Swell direction: show where the swell is coming FROM
+            // 90° swell = traveling east, coming from west, so arrow points left
+            const swellArrow = this.createDirectionArrow(details.swell_direction_deg, true);
+            const sourceDirection = (details.swell_direction_deg + 180) % 360;
+            swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
+            wavePeriodEl.appendChild(swellArrow);
+        }
+        
+        // Wind Speed with wind direction arrow  
+        const windSpeedEl = document.getElementById('windSpeed');
+        if (windSpeedEl) {
+            const windSpeedKts = Math.round(details.wind_speed_kts);
+            windSpeedEl.innerHTML = `${windSpeedKts} kts`;
+            // Wind direction: show where the wind is coming FROM
+            const windArrow = this.createDirectionArrow(details.wind_direction_deg);
+            const sourceDirection = (details.wind_direction_deg + 180) % 360;
+            windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
+            windSpeedEl.appendChild(windArrow);
+        }
+        
+        // Tide State (no direction needed)
+        this.updateElement('tideState', details.tide_state);
     }
 
     formatTimestamp(timestamp) {
-        try {
-            const date = new Date(timestamp);
-            return date.toLocaleString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        } catch (error) {
-            console.error('Error formatting timestamp:', error);
-            return 'Unknown time';
-        }
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
     }
 
     startWaveAnimation() {
+        if (!this.surfData) return;
+
         const canvas = document.getElementById('waveCanvas');
-        if (!canvas) {
-            console.warn('Wave canvas not found');
-            return;
+        if (!canvas) return;
+
+        if (this.waveAnimation) {
+            this.waveAnimation.destroy();
         }
 
-        try {
-            if (this.waveAnimation) {
-                this.waveAnimation.destroy();
-            }
-
-            const waveData = this.surfData?.details || {
-                wave_height_ft: 2,
-                wave_period_sec: 8,
-                swell_direction_deg: 180,
-                wind_speed_kts: 15
-            };
-
-            this.waveAnimation = new WaveAnimation(canvas, waveData);
-            this.waveAnimation.start();
-        } catch (error) {
-            console.error('Error starting wave animation:', error);
-        }
+        this.waveAnimation = new WaveAnimation(canvas, this.surfData.details);
+        this.waveAnimation.start();
     }
 
     async toggleNotifications() {
-        const btn = document.getElementById('notificationBtn');
-        
         if (!('Notification' in window)) {
             this.showMessage('This browser does not support notifications');
             return;
         }
 
         if (!this.notificationsEnabled) {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    this.notificationsEnabled = true;
-                    this.updateNotificationButton(true);
-                    this.saveNotificationPreference();
-                    this.showMessage('Notifications enabled! You\'ll be alerted when conditions are good.');
-                } else {
-                    this.showMessage('Notifications permission denied');
-                }
-            } catch (error) {
-                console.error('Error requesting notification permission:', error);
-                this.showMessage('Error enabling notifications');
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                this.notificationsEnabled = true;
+                this.updateNotificationCheckbox(true);
+                this.saveNotificationPreference();
+                this.showMessage('Notifications enabled! You\'ll be alerted when conditions are good.');
+            } else {
+                this.showMessage('Notifications permission denied');
             }
         } else {
             this.notificationsEnabled = false;
-            this.updateNotificationButton(false);
+            this.updateNotificationCheckbox(false);
             this.saveNotificationPreference();
             this.showMessage('Notifications disabled');
         }
     }
 
-    updateNotificationButton(enabled) {
-        const btn = document.getElementById('notificationBtn');
-        if (btn) {
-            btn.textContent = enabled ? 'Notifications Enabled ✓' : 'Enable Notifications';
-            // btn.style.background = enabled ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.2)';
+    updateNotificationCheckbox(enabled) {
+        const checkbox = document.getElementById('notificationCheckbox');
+        if (checkbox) {
+            const icon = checkbox.querySelector('.checkbox-icon');
+            
+            if (icon) {
+                icon.textContent = enabled ? '☑' : '☐';
+                checkbox.setAttribute('aria-checked', enabled.toString());
+                console.log('Checkbox updated:', enabled ? 'checked ☑' : 'unchecked ☐'); // Debug log
+            } else {
+                console.error('Checkbox icon not found');
+            }
+        } else {
+            console.error('Notification checkbox element not found');
         }
     }
 
     loadNotificationPreference() {
-        try {
-            const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
-            if (enabled && 'Notification' in window && Notification.permission === 'granted') {
-                this.notificationsEnabled = true;
-                this.updateNotificationButton(true);
-            }
-        } catch (error) {
-            console.warn('localStorage not available:', error);
+        const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
+        if (enabled && Notification.permission === 'granted') {
+            this.notificationsEnabled = true;
+            this.updateNotificationCheckbox(true);
         }
     }
 
     saveNotificationPreference() {
-        try {
-            localStorage.setItem('surf-notifications-enabled', this.notificationsEnabled.toString());
-        } catch (error) {
-            console.warn('Cannot save to localStorage:', error);
-        }
+        localStorage.setItem('surf-notifications-enabled', this.notificationsEnabled.toString());
     }
 
     checkForGoodConditions() {
         if (!this.notificationsEnabled || !this.surfData) return;
 
-        const isGoodConditions = this.surfData.score >= 70 || 
-                               this.surfData.rating.toLowerCase() === 'good';
+        const isGoodConditions = this.surfData.score >= 70 || this.surfData.rating.toLowerCase() === 'good';
         
         if (isGoodConditions) {
             this.sendNotification();
@@ -316,34 +301,28 @@ class SurfApp {
     }
 
     sendNotification() {
-        if (!this.notificationsEnabled || 
-            !('Notification' in window) || 
-            Notification.permission !== 'granted') return;
+        if (!this.notificationsEnabled || Notification.permission !== 'granted') return;
 
-        try {
-            const lastNotification = localStorage.getItem('surf-last-notification');
-            const now = Date.now();
-            const oneHour = 60 * 60 * 1000;
+        const lastNotification = localStorage.getItem('surf-last-notification');
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
 
-            // Don't spam notifications - only send once per hour
-            if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
-                return;
-            }
-
-            new Notification('Great Surf Conditions! 🏄‍♂️', {
-                body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
-                icon: '/icons/icon-192.png',
-                badge: '/icons/icon-96.png',
-                vibrate: [200, 100, 200, 100, 200],
-                tag: 'surf-conditions',
-                requireInteraction: false,
-                silent: false
-            });
-
-            localStorage.setItem('surf-last-notification', now.toString());
-        } catch (error) {
-            console.error('Error sending notification:', error);
+        // Don't spam notifications - only send once per hour
+        if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
+            return;
         }
+
+        new Notification('Great Surf Conditions! 🏄‍♂️', {
+            body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-96.png',
+            vibrate: [200, 100, 200, 100, 200],
+            tag: 'surf-conditions',
+            requireInteraction: false,
+            silent: false
+        });
+
+        localStorage.setItem('surf-last-notification', now.toString());
     }
 
     showLoading(show) {
@@ -389,9 +368,7 @@ class SurfApp {
 
         document.body.appendChild(toast);
         setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
+            toast.remove();
         }, 3000);
     }
 
@@ -407,7 +384,7 @@ class SurfApp {
                 top: 0;
                 left: 0;
                 right: 0;
-                background: rgba(34, 197, 94, 0.9);
+                background: black;
                 color: white;
                 padding: 15px;
                 text-align: center;
@@ -418,12 +395,14 @@ class SurfApp {
                 <button onclick="window.location.reload()" style="
                     margin-left: 10px;
                     background: white;
-                    color: #059669;
+                    color: #000;
                     border: none;
                     padding: 8px 16px;
                     border-radius: 5px;
                     cursor: pointer;
-                    font-weight: bold;
+                    font-family: 'DegularDisplay';
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
                 ">Update</button>
             </div>
         `;
@@ -442,11 +421,7 @@ class SurfApp {
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        new SurfApp();
-    } catch (error) {
-        console.error('Error initializing app:', error);
-    }
+    new SurfApp();
 });
 
 // Add CSS for toast animation
