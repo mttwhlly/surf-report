@@ -19,8 +19,470 @@
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
     
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        @font-face {
+            font-family: 'DegularDisplay';
+            src: url('../fonts/DegularDisplay-Light.woff2') format('woff2');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DegularDisplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            color: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .title {
+            font-weight: unset;
+        }
+
+        /* Top control bar for buttons */
+        .top-controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            padding-top: calc(15px + env(safe-area-inset-top));
+            background: transparent;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid #000;
+        }
+
+        .top-controls .btn {
+            background: #fff;
+            border: 1px solid #000;
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .top-controls .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .top-controls .btn:active {
+            transform: translateY(0);
+        }
+
+        .top-controls .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Notification checkbox - inherits .btn styles */
+        .notification-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .notification-checkbox:focus {
+            outline: 2px solid #000;
+            outline-offset: 2px;
+        }
+
+        .checkbox-icon {
+            font-family: 'DegularDisplay', sans-serif;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .checkbox-label {
+            font-family: 'DegularDisplay', sans-serif;
+            font-weight: 300;
+            white-space: nowrap;
+        }
+
+        .refresh-btn-top {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            padding-top: calc(100px + env(safe-area-inset-top)); /* Space for top controls */
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .location {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .timestamp {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid #000;
+        }
+
+        .rating {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .score {
+            font-size: 48px;
+            font-weight: 300;
+            margin: 15px 0;
+            background: linear-gradient(45deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .duration {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        /* Weather conditions card */
+        .weather-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid #000;
+        }
+
+        .weather-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .weather-description {
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 15px;
+            font-family: 'DegularDisplay', sans-serif;
+            text-transform: capitalize;
+        }
+
+        .temperature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .temp-item {
+            text-align: center;
+        }
+
+        .temp-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .temp-value {
+            font-size: 28px;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .temp-unit {
+            font-size: 16px;
+            opacity: 0.7;
+            margin-left: 2px;
+        }
+
+        /* Full width wave container */
+        .wave-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #waveCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid #000;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .detail-value {
+            font-size: 24px;
+            font-weight: 300;
+            font-family: 'DegularDisplay', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        /* Direction arrow styling */
+        .detail-value span {
+            transition: all 0.3s ease;
+            opacity: 0.7;
+            cursor: help;
+        }
+
+        .detail-value:hover span {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .notification-controls {
+            text-align: center;
+            margin-top: 30px;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Hide the old refresh button */
+        .refresh-btn {
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 40px 0;
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(248, 113, 113, 0.2);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            color: #fca5a5;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-family: 'DegularDisplay', sans-serif;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                padding-top: calc(70px + env(safe-area-inset-top));
+            }
+            
+            .status-card, .weather-card {
+                padding: 20px;
+            }
+            
+            .top-controls {
+                padding: 10px 15px;
+                padding-top: calc(10px + env(safe-area-inset-top));
+            }
+            
+            .top-controls .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .checkbox-icon {
+                font-size: 14px;
+            }
+            
+            .refresh-btn-top {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .detail-value {
+                font-size: 20px;
+            }
+            
+            .detail-value span {
+                font-size: 1em;
+            }
+
+            .weather-icon {
+                font-size: 36px;
+            }
+
+            .temp-value {
+                font-size: 24px;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .status-card, .detail-item, .btn, .weather-card {
+                border-width: 2px;
+                border-color: rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            .detail-value span {
+                transition: none !important;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .top-controls {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Top Controls Bar -->
@@ -48,11 +510,6 @@
             <div class="timestamp" id="timestamp"></div>
         </div>
 
-        <!-- <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <div>Loading surf conditions...</div>
-        </div> -->
-
         <div class="error" id="error">
             Failed to load surf conditions. Please try again.
         </div>
@@ -60,8 +517,30 @@
         <div id="surfData" style="display: none;">
             <div class="status-card">
                 <div class="rating" id="rating">-</div>
-                <!-- <div class="score" id="score">0</div> -->
                 <div class="duration" id="duration">-</div>
+            </div>
+
+            <!-- Weather Conditions Card -->
+            <div class="weather-card" id="weatherCard" style="display: none;">
+                <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="weather-description" id="weatherDescription">Clear sky</div>
+                
+                <div class="temperature-grid">
+                    <div class="temp-item">
+                        <div class="temp-label">Air</div>
+                        <div class="temp-value">
+                            <span id="airTemp">--</span>
+                            <span class="temp-unit">°F</span>
+                        </div>
+                    </div>
+                    <div class="temp-item">
+                        <div class="temp-label">Water</div>
+                        <div class="temp-value">
+                            <span id="waterTemp">--</span>
+                            <span class="temp-unit">°F</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="details-grid">
@@ -85,8 +564,726 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/waves.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        class WaveAnimation {
+            constructor(canvas, waveData) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.waveData = waveData;
+                this.animationId = null;
+                this.time = 0;
+                this.isRunning = false;
+                
+                this.setupCanvas();
+                this.calculateWaveProperties();
+            }
+
+            setupCanvas() {
+                this.resize();
+                
+                // Set canvas to full viewport size
+                const dpr = window.devicePixelRatio || 1;
+                
+                this.canvas.width = window.innerWidth * dpr;
+                this.canvas.height = window.innerHeight * dpr;
+                this.ctx.scale(dpr, dpr);
+                
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                
+                // Style the canvas to cover full screen
+                this.canvas.style.width = '100vw';
+                this.canvas.style.height = '100vh';
+            }
+
+            resize() {
+                // Handle window resize
+                if (this.canvas) {
+                    const dpr = window.devicePixelRatio || 1;
+                    
+                    this.canvas.width = window.innerWidth * dpr;
+                    this.canvas.height = window.innerHeight * dpr;
+                    this.ctx.scale(dpr, dpr);
+                    
+                    this.width = window.innerWidth;
+                    this.height = window.innerHeight;
+                    
+                    this.canvas.style.width = '100vw';
+                    this.canvas.style.height = '100vh';
+                    
+                    // Recalculate wave properties for new screen size
+                    this.calculateWaveProperties();
+                }
+            }
+
+            calculateWaveProperties() {
+                // Extract wave properties
+                const waveHeight = this.waveData.wave_height_ft || 2;
+                const wavePeriod = this.waveData.wave_period_sec || 8;
+                const swellDirection = this.waveData.swell_direction_deg || 180;
+                const windSpeed = this.waveData.wind_speed_kts || 10;
+                
+                // Calculate animation parameters based on screen size
+                // Scale amplitude based on screen height for better visual effect
+                this.amplitude = Math.max(20, Math.min(this.height * 0.15, (waveHeight / 8) * (this.height * 0.1)));
+                
+                // Calculate frequency: more wavelengths for shorter periods
+                // Base wavelength scales with screen width for consistency
+                const baseWavelength = Math.max(120, this.width * 0.3);
+                this.frequency = (2 * Math.PI) / baseWavelength;
+                
+                // Calculate speed to match real wave period
+                this.speed = (2 * Math.PI) / (wavePeriod * 60);
+                this.direction = (swellDirection * Math.PI) / 180;
+                
+                // Store original values for reference
+                this.waveHeightFt = waveHeight;
+                this.wavePeriodSec = wavePeriod;
+                
+                // Calculate reference lines and period indicators
+                this.baseY = this.height * 0.6; // Position waves in lower 40% of screen
+                this.maxWaveY = this.baseY - this.amplitude;
+                this.minWaveY = this.baseY + this.amplitude;
+                
+                // Calculate wavelength in pixels
+                this.wavelengthPx = (2 * Math.PI) / this.frequency;
+                
+                // Wave layers for depth - adjusted for full screen
+                this.waves = [
+                    {
+                        amplitude: this.amplitude,
+                        frequency: this.frequency,
+                        speed: this.speed,
+                        phase: 0,
+                        color: 'white',
+                        strokeColor: 'black'
+                    },
+                    {
+                        amplitude: this.amplitude * 0.7,
+                        frequency: this.frequency * 1.3,
+                        speed: this.speed * 1.5,
+                        phase: Math.PI / 3,
+                        color: 'white',
+                        strokeColor: 'black'
+                    },
+                    {
+                        amplitude: this.amplitude * 0.4,
+                        frequency: this.frequency * 2.1,
+                        speed: this.speed * 2.2,
+                        phase: Math.PI / 2,
+                        color: 'white',
+                        strokeColor: 'black'
+                    }
+                ];
+            }
+
+            start() {
+                if (this.isRunning) return;
+                this.isRunning = true;
+                this.animate();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            destroy() {
+                this.stop();
+                this.ctx.clearRect(0, 0, this.width, this.height);
+            }
+
+            animate() {
+                if (!this.isRunning) return;
+
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                // Draw wave layers (back to front)
+                for (let i = this.waves.length - 1; i >= 0; i--) {
+                    this.drawWave(this.waves[i]);
+                }
+                
+                // Add foam/whitecaps for higher waves
+                if (this.waveData.wave_height_ft > 3) {
+                    this.drawFoam();
+                }
+
+                this.time += 1;
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+
+            drawWave(wave) {
+                const points = [];
+                
+                // Generate wave points across full width
+                for (let x = 0; x <= this.width + 20; x += 3) {
+                    const y = this.baseY + 
+                        wave.amplitude * Math.sin(wave.frequency * x + this.time * wave.speed + wave.phase) +
+                        (wave.amplitude * 0.2) * Math.sin(wave.frequency * 2.5 * x + this.time * wave.speed * 1.3);
+                    
+                    points.push({ x, y });
+                }
+                
+                // Draw filled wave
+                this.ctx.beginPath();
+                this.ctx.moveTo(points[0].x, points[0].y);
+                
+                for (let i = 1; i < points.length; i++) {
+                    this.ctx.lineTo(points[i].x, points[i].y);
+                }
+                
+                // Complete the shape for filling to bottom of screen
+                this.ctx.lineTo(this.width, this.height);
+                this.ctx.lineTo(0, this.height);
+                this.ctx.closePath();
+                
+                // Create wave gradient from wave peak to bottom
+                const waveGradient = this.ctx.createLinearGradient(0, this.baseY - wave.amplitude, 0, this.height);
+                waveGradient.addColorStop(0, wave.color);
+                waveGradient.addColorStop(0.7, wave.color.replace(/[\d\.]+\)$/g, '0.05)'));
+                waveGradient.addColorStop(1, wave.color.replace(/[\d\.]+\)$/g, '0.01)'));
+                
+                this.ctx.fillStyle = waveGradient;
+                this.ctx.fill();
+                
+                // Draw wave outline
+                this.ctx.beginPath();
+                this.ctx.moveTo(points[0].x, points[0].y);
+                
+                for (let i = 1; i < points.length; i++) {
+                    this.ctx.lineTo(points[i].x, points[i].y);
+                }
+                
+                this.ctx.strokeStyle = wave.strokeColor;
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+            }
+
+            drawFoam() {
+                const foamParticles = Math.floor(this.width / 50); // Scale particles with screen width
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                
+                for (let i = 0; i < foamParticles; i++) {
+                    const x = (this.time * 2 + i * 80) % (this.width + 100) - 50;
+                    const y = this.baseY + 
+                        this.amplitude * 0.8 * Math.sin(this.frequency * x + this.time * this.speed) +
+                        Math.sin(this.time * 0.05 + i) * 8;
+                    
+                    const size = 2 + Math.sin(this.time * 0.1 + i) * 3;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+        }
+
+        class SurfApp {
+            constructor() {
+                this.surfData = null;
+                this.notificationsEnabled = false;
+                this.API_URL = 'https://c0cgocok00o40c48c40k8g04.mttwhlly.cc/surfability';
+                this.waveAnimation = null;
+                
+                this.init();
+            }
+
+            async init() {
+                await this.registerServiceWorker();
+                this.setupEventListeners();
+                this.loadNotificationPreference();
+                await this.fetchSurfData();
+                this.startAutoRefresh();
+            }
+
+            async registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.register('/sw.js', {
+                            scope: '/'
+                        });
+                        console.log('Service Worker registered:', registration.scope);
+
+                        // Handle updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    this.showUpdateAvailable();
+                                }
+                            });
+                        });
+                    } catch (error) {
+                        console.error('Service Worker registration failed:', error);
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                const refreshBtn = document.getElementById('refreshBtn');
+                const notificationCheckbox = document.getElementById('notificationCheckbox');
+
+                refreshBtn?.addEventListener('click', () => this.fetchSurfData());
+                notificationCheckbox?.addEventListener('click', () => this.toggleNotifications());
+
+                // Handle online/offline events
+                window.addEventListener('online', () => this.fetchSurfData());
+                window.addEventListener('offline', () => this.showOfflineMessage());
+
+                // Handle visibility change for background updates
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        this.fetchSurfData();
+                    }
+                });
+
+                // Handle window resize for canvas
+                window.addEventListener('resize', () => {
+                    if (this.surfData && this.waveAnimation) {
+                        setTimeout(() => this.waveAnimation.resize(), 100);
+                    }
+                });
+            }
+
+            async fetchSurfData() {
+                const loading = document.getElementById('loading');
+                const error = document.getElementById('error');
+                const surfDataEl = document.getElementById('surfData');
+
+                this.showLoading(true);
+                this.hideError();
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+                    const response = await fetch(this.API_URL, {
+                        signal: controller.signal,
+                        cache: 'no-cache',
+                        headers: {
+                            'Accept': 'application/json',
+                        }
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    this.surfData = await response.json();
+                    this.updateUI();
+                    this.startWaveAnimation();
+                    this.checkForGoodConditions();
+
+                } catch (error) {
+                    console.error('Error fetching surf data:', error);
+                    this.showError(this.getErrorMessage(error));
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            getErrorMessage(error) {
+                if (error.name === 'AbortError') {
+                    return 'Request timed out. Please check your connection.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    return 'Unable to connect. Check your internet connection.';
+                } else {
+                    return `Failed to load surf conditions: ${error.message}`;
+                }
+            }
+
+            updateUI() {
+                if (!this.surfData) return;
+
+                const surfDataEl = document.getElementById('surfData');
+                surfDataEl.style.display = 'block';
+
+                // Update header
+                this.updateElement('location', this.surfData.location);
+                this.updateElement('timestamp', this.formatTimestamp(this.surfData.timestamp));
+
+                // Update status card
+                this.updateRating();
+                this.updateElement('duration', this.surfData.goodSurfDuration);
+
+                // Update weather card
+                this.updateWeatherCard();
+
+                // Update details with direction arrows
+                this.updateDetails();
+            }
+
+            updateElement(id, content) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = content;
+                }
+            }
+
+            updateRating() {
+                const rating = document.getElementById('rating');
+                if (rating) {
+                    rating.textContent = this.surfData.rating;
+                    rating.className = `rating ${this.surfData.rating.toLowerCase()}`;
+                }
+            }
+
+            updateWeatherCard() {
+                if (!this.surfData.weather) return;
+
+                const weatherCard = document.getElementById('weatherCard');
+                const weatherIcon = document.getElementById('weatherIcon');
+                const weatherDescription = document.getElementById('weatherDescription');
+                const airTemp = document.getElementById('airTemp');
+                const waterTemp = document.getElementById('waterTemp');
+
+                // Show the weather card
+                weatherCard.style.display = 'block';
+
+                // Update weather icon based on weather code
+                const icon = this.getWeatherIcon(this.surfData.weather.weather_code);
+                weatherIcon.textContent = icon;
+
+                // Update weather description
+                weatherDescription.textContent = this.surfData.weather.weather_description;
+
+                // Update temperatures
+                airTemp.textContent = Math.round(this.surfData.weather.air_temperature_f);
+                waterTemp.textContent = Math.round(this.surfData.weather.water_temperature_f);
+            }
+
+            getWeatherIcon(weatherCode) {
+                // Map weather codes to emoji icons
+                const iconMap = {
+                    0: '☀️',   // Clear sky
+                    1: '🌤️',   // Mainly clear
+                    2: '⛅',   // Partly cloudy
+                    3: '☁️',   // Overcast
+                    45: '🌫️',  // Fog
+                    48: '🌫️',  // Depositing rime fog
+                    51: '🌦️',  // Light drizzle
+                    53: '🌦️',  // Moderate drizzle
+                    55: '🌧️',  // Dense drizzle
+                    56: '🌨️',  // Light freezing drizzle
+                    57: '🌨️',  // Dense freezing drizzle
+                    61: '🌧️',  // Slight rain
+                    63: '🌧️',  // Moderate rain
+                    65: '🌧️',  // Heavy rain
+                    66: '🌨️',  // Light freezing rain
+                    67: '🌨️',  // Heavy freezing rain
+                    71: '🌨️',  // Slight snow fall
+                    73: '❄️',  // Moderate snow fall
+                    75: '❄️',  // Heavy snow fall
+                    77: '🌨️',  // Snow grains
+                    80: '🌦️',  // Slight rain showers
+                    81: '🌧️',  // Moderate rain showers
+                    82: '⛈️',  // Violent rain showers
+                    85: '🌨️',  // Slight snow showers
+                    86: '❄️',  // Heavy snow showers
+                    95: '⛈️',  // Thunderstorm
+                    96: '⛈️',  // Thunderstorm with slight hail
+                    99: '⛈️'   // Thunderstorm with heavy hail
+                };
+
+                return iconMap[weatherCode] || '🌤️';
+            }
+
+            // Convert degrees to compass direction
+            getCompassDirection(degrees) {
+                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                const index = Math.round(degrees / 22.5) % 16;
+                return directions[index];
+            }
+
+            // Create direction arrow using Degular font character
+            createDirectionArrow(degrees, isSwellDirection = false) {
+                const arrow = document.createElement('span');
+                arrow.textContent = '→';
+                arrow.style.fontFamily = 'DegularDisplay, sans-serif';
+                arrow.style.fontSize = '1em';
+                arrow.style.display = 'inline-block';
+                arrow.style.marginLeft = '6px';
+                arrow.style.color = '#000';
+                arrow.style.transition = 'all 0.3s ease';
+                
+                // For swell direction: arrow points where swell is COMING FROM
+                // For wind direction: arrow points where wind is COMING FROM
+                // Both show source direction, so we need to rotate 180° from the given direction
+                const rotationDegrees = degrees + 90;
+                arrow.style.transform = `rotate(${rotationDegrees}deg)`;
+                arrow.style.transformOrigin = 'center';
+                
+                return arrow;
+            }
+
+            updateDetails() {
+                const details = this.surfData.details;
+                
+                // Wave Height (no direction needed)
+                this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
+                
+                // Wave Period with swell direction arrow
+                const wavePeriodEl = document.getElementById('wavePeriod');
+                if (wavePeriodEl) {
+                    wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
+                    // Swell direction: show where the swell is coming FROM
+                    // 90° swell = traveling east, coming from west, so arrow points left
+                    const swellArrow = this.createDirectionArrow(details.swell_direction_deg, true);
+                    const sourceDirection = (details.swell_direction_deg + 180) % 360;
+                    swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
+                    wavePeriodEl.appendChild(swellArrow);
+                }
+                
+                // Wind Speed with wind direction arrow  
+                const windSpeedEl = document.getElementById('windSpeed');
+                if (windSpeedEl) {
+                    const windSpeedKts = Math.round(details.wind_speed_kts);
+                    windSpeedEl.innerHTML = `${windSpeedKts} kts`;
+                    // Wind direction: show where the wind is coming FROM
+                    const windArrow = this.createDirectionArrow(details.wind_direction_deg);
+                    const sourceDirection = (details.wind_direction_deg + 180) % 360;
+                    windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
+                    windSpeedEl.appendChild(windArrow);
+                }
+                
+                // Tide State (no direction needed)
+                this.updateElement('tideState', details.tide_state);
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+
+            startWaveAnimation() {
+                if (!this.surfData) return;
+
+                const canvas = document.getElementById('waveCanvas');
+                if (!canvas) return;
+
+                if (this.waveAnimation) {
+                    this.waveAnimation.destroy();
+                }
+
+                this.waveAnimation = new WaveAnimation(canvas, this.surfData.details);
+                this.waveAnimation.start();
+            }
+
+            async toggleNotifications() {
+                if (!('Notification' in window)) {
+                    this.showMessage('This browser does not support notifications');
+                    return;
+                }
+
+                if (!this.notificationsEnabled) {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        this.notificationsEnabled = true;
+                        this.updateNotificationCheckbox(true);
+                        this.saveNotificationPreference();
+                        this.showMessage('Notifications enabled! You\'ll be alerted when conditions are good.');
+                    } else {
+                        this.showMessage('Notifications permission denied');
+                    }
+                } else {
+                    this.notificationsEnabled = false;
+                    this.updateNotificationCheckbox(false);
+                    this.saveNotificationPreference();
+                    this.showMessage('Notifications disabled');
+                }
+            }
+
+            updateNotificationCheckbox(enabled) {
+                const checkbox = document.getElementById('notificationCheckbox');
+                if (checkbox) {
+                    const icon = checkbox.querySelector('.checkbox-icon');
+                    
+                    if (icon) {
+                        icon.textContent = enabled ? '☑' : '☐';
+                        checkbox.setAttribute('aria-checked', enabled.toString());
+                        console.log('Checkbox updated:', enabled ? 'checked ☑' : 'unchecked ☐'); // Debug log
+                    } else {
+                        console.error('Checkbox icon not found');
+                    }
+                } else {
+                    console.error('Notification checkbox element not found');
+                }
+            }
+
+            loadNotificationPreference() {
+                const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
+                if (enabled && Notification.permission === 'granted') {
+                    this.notificationsEnabled = true;
+                    this.updateNotificationCheckbox(true);
+                }
+            }
+
+            saveNotificationPreference() {
+                localStorage.setItem('surf-notifications-enabled', this.notificationsEnabled.toString());
+            }
+
+            checkForGoodConditions() {
+                if (!this.notificationsEnabled || !this.surfData) return;
+
+                const isGoodConditions = this.surfData.score >= 70 || this.surfData.rating.toLowerCase() === 'good';
+                
+                if (isGoodConditions) {
+                    this.sendNotification();
+                }
+            }
+
+            sendNotification() {
+                if (!this.notificationsEnabled || Notification.permission !== 'granted') return;
+
+                const lastNotification = localStorage.getItem('surf-last-notification');
+                const now = Date.now();
+                const oneHour = 60 * 60 * 1000;
+
+                // Don't spam notifications - only send once per hour
+                if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
+                    return;
+                }
+
+                new Notification('Great Surf Conditions! 🏄‍♂️', {
+                    body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
+                    icon: '/icons/icon-192.png',
+                    badge: '/icons/icon-96.png',
+                    vibrate: [200, 100, 200, 100, 200],
+                    tag: 'surf-conditions',
+                    requireInteraction: false,
+                    silent: false
+                });
+
+                localStorage.setItem('surf-last-notification', now.toString());
+            }
+
+            showLoading(show) {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.style.display = show ? 'block' : 'none';
+                }
+            }
+
+            showError(message) {
+                const error = document.getElementById('error');
+                if (error) {
+                    error.textContent = message;
+                    error.style.display = 'block';
+                }
+            }
+
+            hideError() {
+                const error = document.getElementById('error');
+                if (error) {
+                    error.style.display = 'none';
+                }
+            }
+
+            showMessage(message) {
+                // Create a temporary toast message
+                const toast = document.createElement('div');
+                toast.className = 'toast-message';
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 25px;
+                    z-index: 1000;
+                    backdrop-filter: blur(10px);
+                    animation: slideIn 0.3s ease;
+                `;
+
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            showOfflineMessage() {
+                this.showMessage('You are offline. Showing cached data.');
+            }
+
+            showUpdateAvailable() {
+                const updateMessage = document.createElement('div');
+                updateMessage.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: black;
+                        color: white;
+                        padding: 15px;
+                        text-align: center;
+                        z-index: 1000;
+                        backdrop-filter: blur(10px);
+                    ">
+                        New version available! 
+                        <button onclick="window.location.reload()" style="
+                            margin-left: 10px;
+                            background: white;
+                            color: #000;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-family: 'DegularDisplay';
+                            letter-spacing: 1px;
+                            text-transform: uppercase;
+                        ">Update</button>
+                    </div>
+                `;
+                document.body.appendChild(updateMessage);
+            }
+
+            startAutoRefresh() {
+                // Refresh every 5 minutes
+                setInterval(() => {
+                    if (!document.hidden && navigator.onLine) {
+                        this.fetchSurfData();
+                    }
+                }, 5 * 60 * 1000);
+            }
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SurfApp();
+        });
+
+        // Add CSS for toast animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
