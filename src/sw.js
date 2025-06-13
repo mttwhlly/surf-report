@@ -1,5 +1,5 @@
-const CACHE_NAME = 'surf-conditions-v1.2.9';
-const DYNAMIC_CACHE = 'surf-dynamic-v1.2.9';
+const CACHE_NAME = 'surf-conditions-v1.3.0';
+const DYNAMIC_CACHE = 'surf-dynamic-v1.3.0';
 
 // Only cache files that actually exist
 const STATIC_ASSETS = [
