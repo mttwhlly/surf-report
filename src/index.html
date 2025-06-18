@@ -270,6 +270,99 @@
             margin-left: 2px;
         }
 
+        /* Tide card */
+        .tide-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #000;
+        }
+
+        .tide-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tide-icon {
+            font-size: 24px;
+        }
+
+        .tide-title {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 18;
+        }
+
+        .tide-current {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .tide-height {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 32;
+            margin-bottom: 5px;
+        }
+
+        .tide-state {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            font-weight: 500;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 14;
+        }
+
+        .tide-predictions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .tide-prediction {
+            text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tide-prediction-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 12;
+        }
+
+        .tide-prediction-time {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 16;
+            margin-bottom: 3px;
+        }
+
+        .tide-prediction-height {
+            font-size: 14px;
+            opacity: 0.8;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-variation-settings: "opsz" 14;
+        }
+
         /* Full width wave container */
         .wave-container {
             position: fixed;
@@ -427,7 +520,7 @@
                 padding-top: calc(70px + env(safe-area-inset-top));
             }
             
-            .status-card, .weather-card {
+            .status-card, .weather-card, .tide-card {
                 padding: 20px;
             }
             
@@ -466,11 +559,20 @@
             .temp-value {
                 font-size: 24px;
             }
+
+            .tide-height {
+                font-size: 28px;
+            }
+
+            .tide-predictions {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
         }
 
         /* High contrast mode support */
         @media (prefers-contrast: high) {
-            .status-card, .detail-item, .btn, .weather-card {
+            .status-card, .detail-item, .btn, .weather-card, .tide-card {
                 border-width: 2px;
                 border-color: rgba(255, 255, 255, 0.8);
             }
@@ -561,6 +663,32 @@
                 </div>
             </div>
 
+            <!-- Tide Information Card -->
+            <div class="tide-card" id="tideCard" style="display: none;">
+                <div class="tide-header">
+                    <div class="tide-icon">🌊</div>
+                    <div class="tide-title">Tide Conditions</div>
+                </div>
+                
+                <div class="tide-current">
+                    <div class="tide-height" id="tideHeight">-- ft</div>
+                    <div class="tide-state" id="tideStateFull">Current State</div>
+                </div>
+                
+                <div class="tide-predictions" id="tidePredictions">
+                    <div class="tide-prediction">
+                        <div class="tide-prediction-label">Next High</div>
+                        <div class="tide-prediction-time" id="nextHighTime">--</div>
+                        <div class="tide-prediction-height" id="nextHighHeight">-- ft</div>
+                    </div>
+                    <div class="tide-prediction">
+                        <div class="tide-prediction-label">Next Low</div>
+                        <div class="tide-prediction-time" id="nextLowTime">--</div>
+                        <div class="tide-prediction-height" id="nextLowHeight">-- ft</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Wave Height</div>
@@ -575,7 +703,7 @@
                     <div class="detail-value" id="windSpeed">-</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Tide</div>
+                    <div class="detail-label">Tide State</div>
                     <div class="detail-value" id="tideState">-</div>
                 </div>
             </div>
@@ -933,6 +1061,9 @@
                 // Update weather card
                 this.updateWeatherCard();
 
+                // Update tide card
+                this.updateTideCard();
+
                 // Update details with direction arrows
                 this.updateDetails();
             }
@@ -974,6 +1105,43 @@
                 // Update temperatures
                 airTemp.textContent = Math.round(this.surfData.weather.air_temperature_f);
                 waterTemp.textContent = Math.round(this.surfData.weather.water_temperature_f);
+            }
+
+            updateTideCard() {
+                if (!this.surfData.tides) return;
+
+                const tideCard = document.getElementById('tideCard');
+                const tideHeight = document.getElementById('tideHeight');
+                const tideStateFull = document.getElementById('tideStateFull');
+                const nextHighTime = document.getElementById('nextHighTime');
+                const nextHighHeight = document.getElementById('nextHighHeight');
+                const nextLowTime = document.getElementById('nextLowTime');
+                const nextLowHeight = document.getElementById('nextLowHeight');
+
+                // Show the tide card
+                tideCard.style.display = 'block';
+
+                // Update current tide information
+                tideHeight.textContent = `${this.surfData.tides.current_height_ft} ft`;
+                tideStateFull.textContent = this.surfData.tides.state;
+
+                // Update next high tide
+                if (this.surfData.tides.next_high) {
+                    nextHighTime.textContent = this.surfData.tides.next_high.time;
+                    nextHighHeight.textContent = `${this.surfData.tides.next_high.height} ft`;
+                } else {
+                    nextHighTime.textContent = '--';
+                    nextHighHeight.textContent = '-- ft';
+                }
+
+                // Update next low tide
+                if (this.surfData.tides.next_low) {
+                    nextLowTime.textContent = this.surfData.tides.next_low.time;
+                    nextLowHeight.textContent = `${this.surfData.tides.next_low.height} ft`;
+                } else {
+                    nextLowTime.textContent = '--';
+                    nextLowHeight.textContent = '-- ft';
+                }
             }
 
             getWeatherIcon(weatherCode) {
@@ -1071,7 +1239,7 @@
                     windSpeedEl.appendChild(windArrow);
                 }
                 
-                // Tide State (no direction needed)
+                // Tide State (simplified display for details grid)
                 this.updateElement('tideState', details.tide_state);
             }
 
