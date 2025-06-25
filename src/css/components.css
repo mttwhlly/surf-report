@@ -1,0 +1,478 @@
+/* Component-specific styles for SURF LAB */
+
+/* Top Controls */
+.top-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    padding-top: calc(15px + env(safe-area-inset-top));
+    background: transparent;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #000;
+}
+
+.top-controls .btn {
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 14;
+}
+
+.top-controls .btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.top-controls .btn:active {
+    transform: translateY(0);
+}
+
+.top-controls .controls {
+    display: flex;
+    gap: 8px;
+}
+
+/* Notification Checkbox */
+.notification-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.notification-checkbox:focus {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+}
+
+.checkbox-icon {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.checkbox-label {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500;
+    white-space: nowrap;
+    font-variation-settings: "opsz" 14;
+}
+
+.refresh-btn-top {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 0;
+}
+
+/* Container and Layout */
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    padding-top: calc(100px + env(safe-area-inset-top));
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.location {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 24;
+}
+
+.timestamp {
+    font-size: 14px;
+    opacity: 0.8;
+    font-weight: 400;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 14;
+}
+
+/* Status Card */
+.status-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    text-align: center;
+    border: 1px solid #000;
+}
+
+.rating {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 32;
+}
+
+.duration {
+    font-size: 16px;
+    opacity: 0.9;
+    font-weight: 500;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 16;
+}
+
+/* Weather Card */
+.weather-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+    border: 1px solid #000;
+}
+
+.weather-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    line-height: 1;
+}
+
+.weather-description {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    text-transform: capitalize;
+    font-variation-settings: "opsz" 18;
+}
+
+.temperature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.temp-item {
+    text-align: center;
+}
+
+.temp-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 12;
+}
+
+.temp-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 28;
+}
+
+.temp-unit {
+    font-size: 16px;
+    opacity: 0.7;
+    margin-left: 2px;
+}
+
+/* Tide Card */
+.tide-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid #000;
+    position: relative;
+    overflow: hidden;
+}
+
+.tide-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+.tide-icon {
+    font-size: 24px;
+}
+
+.tide-title {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 18;
+}
+
+.tide-visual-container {
+    position: relative;
+    height: 120px;
+    margin: 15px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.tide-wave-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.tide-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.tide-marker {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 3px 6px;
+    border-radius: 6px;
+    transform: translateX(-50%);
+    font-variation-settings: "opsz" 11;
+}
+
+.tide-current {
+    text-align: center;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+.tide-height {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 32;
+    margin-bottom: 5px;
+}
+
+.tide-state {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    font-weight: 500;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 14;
+}
+
+.tide-predictions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+.tide-prediction {
+    text-align: center;
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tide-prediction-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 12;
+}
+
+.tide-prediction-time {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 16;
+    margin-bottom: 3px;
+}
+
+.tide-prediction-height {
+    font-size: 14px;
+    opacity: 0.8;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 14;
+}
+
+/* Detail Items */
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #000;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.detail-visual-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.detail-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-variation-settings: "opsz" 12;
+    position: relative;
+    z-index: 10;
+}
+
+.detail-value {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-variation-settings: "opsz" 24;
+    position: relative;
+    z-index: 10;
+}
+
+.detail-value span {
+    transition: all 0.3s ease;
+    opacity: 0.7;
+    cursor: help;
+}
+
+.detail-value:hover span {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Visual Effects Containers */
+.wind-lines-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.period-visual-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Loading and Error States */
+.loading {
+    display: none;
+    text-align: center;
+    margin: 40px 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500;
+    font-variation-settings: "opsz" 16;
+}
+
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.error {
+    background: rgba(248, 113, 113, 0.2);
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    color: #fca5a5;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    text-align: center;
+    display: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500;
+    font-variation-settings: "opsz" 16;
+}

@@ -1,3 +1,5 @@
+/* Base styles and typography for SURF LAB */
+
 @font-face {
     font-family: 'DegularDisplay';
     src: url('../fonts/DegularDisplay-Light.woff2') format('woff2');
@@ -13,177 +15,19 @@
 }
 
 body {
-    font-family: 'DegularDisplay', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: white;
-    /* linear-gradient(135deg, #003366 0%, #0077cc 100%); */
     color: #000;
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
 }
 
 .title {
-    font-weight: unset;
-}
-
-/* Top control bar for buttons */
-.top-controls {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    padding-top: calc(15px + env(safe-area-inset-top));
-    background: transparent;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid #000;
-}
-
-.top-controls .btn {
-    /* background: rgba(255, 255, 255, 0.2); */
-    background: #fff;
-    border: 1px solid #000;
-    color: #000;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
     font-weight: 300;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-.top-controls .btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
-}
-
-.top-controls .btn:active {
-    transform: translateY(0);
-}
-
-.top-controls .controls {
-    display: flex;
-    gap: 8px;
-}
-
-/* Notification checkbox - inherits .btn styles */
-.notification-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    user-select: none;
-}
-
-.notification-checkbox:focus {
-    outline: 2px solid #000;
-    outline-offset: 2px;
-}
-
-.checkbox-icon {
-    font-family: 'DegularDisplay', sans-serif;
-    font-size: 16px;
-    line-height: 1;
-}
-
-.checkbox-label {
-    font-family: 'DegularDisplay', sans-serif;
-    font-weight: 300;
-    white-space: nowrap;
-}
-
-.refresh-btn-top {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    padding: 0;
-}
-
-.container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    position: relative;
-    z-index: 2;
-    min-height: 100vh;
-    padding-top: calc(100px + env(safe-area-inset-top)); /* Space for top controls */
-}
-
-.header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.location {
-    font-size: 24px;
-    font-weight: 300;
-    margin-bottom: 10px;
-    font-family: 'DegularDisplay', sans-serif;
-    /* text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); */
-}
-
-.timestamp {
-    font-size: 14px;
-    opacity: 0.8;
-    font-weight: 300;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-.status-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px;
-    margin-bottom: 30px;
-    text-align: center;
-    border: 1px solid #000;
-    /* box-shadow: 0 8px 4px rgba(0, 0, 0, 0.1); */
-}
-
-.rating {
-    font-size: 32px;
-    font-weight: 300;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-/* .rating.good { color: #4ade80; }
-.rating.marginal { color: #fbbf24; }
-.rating.poor { color: #f87171;} */
-
-.score {
-    font-size: 48px;
-    font-weight: 300;
-    margin: 15px 0;
-    background: linear-gradient(45deg, #60a5fa, #34d399);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-.duration {
-    font-size: 16px;
-    opacity: 0.9;
-    font-weight: 300;
-    font-family: 'DegularDisplay', sans-serif;
+    font-variation-settings: "opsz" 20;
 }
 
 /* Full width wave container */
@@ -203,150 +47,14 @@ body {
     display: block;
 }
 
-.details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.detail-item {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid #000;
-}
-
-.detail-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.8;
-    margin-bottom: 8px;
-    font-weight: 300;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-.detail-value {
-    font-size: 24px;
-    font-weight: 300;
-    font-family: 'DegularDisplay', sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-
-/* Direction arrow styling */
-.detail-value span {
-    transition: all 0.3s ease;
-    opacity: 0.7;
-    cursor: help;
-}
-
-.detail-value:hover span {
-    opacity: 1;
-    transform: scale(1.15);
-}
-
-.notification-controls {
-    text-align: center;
-    margin-top: 30px;
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-.btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-size: 16px;
-    font-weight: 300;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-/* .btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-} */
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Hide the old refresh button */
-.refresh-btn {
-    display: none;
-}
-
-.loading {
-    display: none;
-    text-align: center;
-    margin: 40px 0;
-    font-family: 'DegularDisplay', sans-serif;
-}
-
-.spinner {
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top: 3px solid white;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.error {
-    background: rgba(248, 113, 113, 0.2);
-    border: 1px solid rgba(248, 113, 113, 0.5);
-    color: #fca5a5;
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    text-align: center;
-    display: none;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    font-family: 'DegularDisplay', sans-serif;
-}
-
 /* Responsive Design */
 @media (max-width: 480px) {
-    /* .details-grid {
-        grid-template-columns: 1fr;
-    } */
-    
     .container {
         padding: 15px;
         padding-top: calc(70px + env(safe-area-inset-top));
     }
     
-    .status-card {
+    .status-card, .weather-card, .tide-card {
         padding: 20px;
     }
     
@@ -377,19 +85,32 @@ body {
     .detail-value span {
         font-size: 1em;
     }
-}
 
-/* Dark mode support */
-/* @media (prefers-color-scheme: dark) {
-    body {
-        background: '#171717';
-        /* linear-gradient(135deg, #001122 0%, #003d5c 100%); */
-    /*}
-} */
+    .weather-icon {
+        font-size: 36px;
+    }
+
+    .temp-value {
+        font-size: 24px;
+    }
+
+    .tide-height {
+        font-size: 28px;
+    }
+
+    .tide-predictions {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .tide-visual-container {
+        height: 100px;
+    }
+}
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-    .status-card, .detail-item, .btn {
+    .status-card, .detail-item, .weather-card, .tide-card {
         border-width: 2px;
         border-color: rgba(255, 255, 255, 0.8);
     }
@@ -405,6 +126,10 @@ body {
     
     .detail-value span {
         transition: none !important;
+    }
+
+    .wind-line, .period-wave {
+        animation: none !important;
     }
 }
 

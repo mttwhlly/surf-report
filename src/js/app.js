@@ -4,6 +4,7 @@ class SurfApp {
         this.notificationsEnabled = false;
         this.API_URL = 'https://c0cgocok00o40c48c40k8g04.mttwhlly.cc/surfability';
         this.waveAnimation = null;
+        this.tideWaveVisualizer = null;
         
         this.init();
     }
@@ -24,12 +25,10 @@ class SurfApp {
                 });
                 console.log('Service Worker registered:', registration.scope);
 
-                // Handle updates
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New version available
                             this.showUpdateAvailable();
                         }
                     });
@@ -47,36 +46,33 @@ class SurfApp {
         refreshBtn?.addEventListener('click', () => this.fetchSurfData());
         notificationCheckbox?.addEventListener('click', () => this.toggleNotifications());
 
-        // Handle online/offline events
         window.addEventListener('online', () => this.fetchSurfData());
         window.addEventListener('offline', () => this.showOfflineMessage());
 
-        // Handle visibility change for background updates
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 this.fetchSurfData();
             }
         });
 
-        // Handle window resize for canvas
         window.addEventListener('resize', () => {
             if (this.surfData && this.waveAnimation) {
                 setTimeout(() => this.waveAnimation.resize(), 100);
+            }
+            if (this.tideWaveVisualizer) {
+                setTimeout(() => {
+                    this.tideWaveVisualizer.setupCanvas();
+                }, 100);
             }
         });
     }
 
     async fetchSurfData() {
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const surfDataEl = document.getElementById('surfData');
-
-        this.showLoading(true);
         this.hideError();
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
             const response = await fetch(this.API_URL, {
                 signal: controller.signal,
@@ -95,14 +91,107 @@ class SurfApp {
             this.surfData = await response.json();
             this.updateUI();
             this.startWaveAnimation();
+            this.updateVisualizations();
             this.checkForGoodConditions();
 
         } catch (error) {
             console.error('Error fetching surf data:', error);
             this.showError(this.getErrorMessage(error));
-        } finally {
-            this.showLoading(false);
         }
+    }
+
+    updateVisualizations() {
+        if (!this.surfData) return;
+
+        // Update tide wave visualization
+        this.updateTideVisualization();
+        
+        // Update wave height background
+        if (this.surfData.details?.wave_height_ft) {
+            updateWaveHeightVisual(this.surfData.details.wave_height_ft);
+        }
+        
+        // Update wind lines
+        if (this.surfData.details?.wind_speed_kts && this.surfData.details?.wind_direction_deg) {
+            updateWindVisual(this.surfData.details.wind_speed_kts, this.surfData.details.wind_direction_deg);
+        }
+
+        // Update period visualization
+        if (this.surfData.details?.wave_period_sec && this.surfData.details?.swell_direction_deg) {
+            updatePeriodVisual(this.surfData.details.wave_period_sec, this.surfData.details.swell_direction_deg);
+        }
+    }
+
+    updateTideVisualization() {
+        const canvas = document.getElementById('tideWaveCanvas');
+        if (!canvas) return;
+
+        if (this.tideWaveVisualizer) {
+            this.tideWaveVisualizer.destroy();
+        }
+
+        // Use real tide data if available, otherwise use simplified tide state
+        const tideData = this.surfData.tides || {
+            current_height_ft: parseFloat(this.surfData.details?.tide_height) || 3,
+            state: this.surfData.details?.tide_state || 'Unknown'
+        };
+
+        this.tideWaveVisualizer = new TideWaveVisualizer(canvas, tideData);
+        this.updateTideMarkers();
+    }
+
+    updateTideMarkers() {
+        const markersContainer = document.getElementById('tideMarkers');
+        if (!markersContainer) return;
+
+        markersContainer.innerHTML = '';
+
+        // Add markers based on available data
+        if (this.surfData.tides) {
+            // Full tide data available
+            if (this.surfData.tides.next_high) {
+                const highMarker = document.createElement('div');
+                highMarker.className = 'tide-marker';
+                highMarker.textContent = this.surfData.tides.next_high.time;
+                highMarker.style.left = '75%';
+                highMarker.style.top = '10px';
+                markersContainer.appendChild(highMarker);
+            }
+
+            if (this.surfData.tides.next_low) {
+                const lowMarker = document.createElement('div');
+                lowMarker.className = 'tide-marker';
+                lowMarker.textContent = this.surfData.tides.next_low.time;
+                lowMarker.style.left = '25%';
+                lowMarker.style.bottom = '10px';
+                markersContainer.appendChild(lowMarker);
+            }
+        } else {
+            // Simplified markers for basic tide state
+            const highMarker = document.createElement('div');
+            highMarker.className = 'tide-marker';
+            highMarker.textContent = 'High';
+            highMarker.style.left = '75%';
+            highMarker.style.top = '10px';
+            markersContainer.appendChild(highMarker);
+
+            const lowMarker = document.createElement('div');
+            lowMarker.className = 'tide-marker';
+            lowMarker.textContent = 'Low';
+            lowMarker.style.left = '25%';
+            lowMarker.style.bottom = '10px';
+            markersContainer.appendChild(lowMarker);
+        }
+
+        // Current time marker
+        const currentMarker = document.createElement('div');
+        currentMarker.className = 'tide-marker';
+        currentMarker.textContent = 'NOW';
+        currentMarker.style.left = '50%';
+        currentMarker.style.top = '50%';
+        currentMarker.style.transform = 'translate(-50%, -50%)';
+        currentMarker.style.background = 'rgba(211, 47, 47, 0.9)';
+        markersContainer.appendChild(currentMarker);
     }
 
     getErrorMessage(error) {
@@ -121,16 +210,14 @@ class SurfApp {
         const surfDataEl = document.getElementById('surfData');
         surfDataEl.style.display = 'block';
 
-        // Update header
         this.updateElement('location', this.surfData.location);
         this.updateElement('timestamp', this.formatTimestamp(this.surfData.timestamp));
 
-        // Update status card
         this.updateRating();
-        this.updateElement('score', this.surfData.score);
         this.updateElement('duration', this.surfData.goodSurfDuration);
 
-        // Update details with direction arrows
+        this.updateWeatherCard();
+        this.updateTideCard();
         this.updateDetails();
     }
 
@@ -149,27 +236,96 @@ class SurfApp {
         }
     }
 
-    // Convert degrees to compass direction
+    updateWeatherCard() {
+        if (!this.surfData.weather) return;
+
+        const weatherCard = document.getElementById('weatherCard');
+        const weatherIcon = document.getElementById('weatherIcon');
+        const weatherDescription = document.getElementById('weatherDescription');
+        const airTemp = document.getElementById('airTemp');
+        const waterTemp = document.getElementById('waterTemp');
+
+        weatherCard.style.display = 'block';
+
+        const icon = this.getWeatherIcon(this.surfData.weather.weather_code);
+        weatherIcon.textContent = icon;
+
+        weatherDescription.textContent = this.surfData.weather.weather_description;
+
+        airTemp.textContent = Math.round(this.surfData.weather.air_temperature_f);
+        waterTemp.textContent = Math.round(this.surfData.weather.water_temperature_f);
+    }
+
+    updateTideCard() {
+        // Only show tide card if we have detailed tide data
+        if (!this.surfData.tides) return;
+
+        const tideCard = document.getElementById('tideCard');
+        const tideHeight = document.getElementById('tideHeight');
+        const tideStateFull = document.getElementById('tideStateFull');
+        const nextHighTime = document.getElementById('nextHighTime');
+        const nextHighHeight = document.getElementById('nextHighHeight');
+        const nextLowTime = document.getElementById('nextLowTime');
+        const nextLowHeight = document.getElementById('nextLowHeight');
+
+        tideCard.style.display = 'block';
+
+        const currentHeight = parseFloat(this.surfData.tides.current_height_ft);
+        const displayHeight = !isNaN(currentHeight) ? currentHeight.toFixed(1) : '--';
+        
+        tideHeight.textContent = `${displayHeight} ft`;
+        tideStateFull.textContent = this.surfData.tides.state || 'Unknown';
+
+        if (this.surfData.tides.next_high) {
+            nextHighTime.textContent = this.surfData.tides.next_high.time || '--';
+            const highHeight = parseFloat(this.surfData.tides.next_high.height);
+            const displayHighHeight = !isNaN(highHeight) ? highHeight.toFixed(1) : '--';
+            nextHighHeight.textContent = `${displayHighHeight} ft`;
+        } else {
+            nextHighTime.textContent = '--';
+            nextHighHeight.textContent = '-- ft';
+        }
+
+        if (this.surfData.tides.next_low) {
+            nextLowTime.textContent = this.surfData.tides.next_low.time || '--';
+            const lowHeight = parseFloat(this.surfData.tides.next_low.height);
+            const displayLowHeight = !isNaN(lowHeight) ? lowHeight.toFixed(1) : '--';
+            nextLowHeight.textContent = `${displayLowHeight} ft`;
+        } else {
+            nextLowTime.textContent = '--';
+            nextLowHeight.textContent = '-- ft';
+        }
+    }
+
+    getWeatherIcon(weatherCode) {
+        const iconMap = {
+            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+            51: '🌦️', 53: '🌦️', 55: '🌧️', 56: '🌨️', 57: '🌨️',
+            61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '🌨️', 67: '🌨️',
+            71: '🌨️', 73: '❄️', 75: '❄️', 77: '🌨️',
+            80: '🌦️', 81: '🌧️', 82: '⛈️', 85: '🌨️', 86: '❄️',
+            95: '⛈️', 96: '⛈️', 99: '⛈️'
+        };
+        return iconMap[weatherCode] || '🌤️';
+    }
+
     getCompassDirection(degrees) {
         const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
         const index = Math.round(degrees / 22.5) % 16;
         return directions[index];
     }
 
-    // Create direction arrow using Degular font character
-    createDirectionArrow(degrees, isSwellDirection = false) {
+    createDirectionArrow(degrees) {
         const arrow = document.createElement('span');
         arrow.textContent = '→';
-        arrow.style.fontFamily = 'DegularDisplay, sans-serif';
+        arrow.style.fontFamily = 'Bricolage Grotesque, sans-serif';
         arrow.style.fontSize = '1em';
         arrow.style.display = 'inline-block';
         arrow.style.marginLeft = '6px';
         arrow.style.color = '#000';
         arrow.style.transition = 'all 0.3s ease';
+        arrow.style.fontWeight = '600';
         
-        // For swell direction: arrow points where swell is COMING FROM
-        // For wind direction: arrow points where wind is COMING FROM
-        // Both show source direction, so we need to rotate 180° from the given direction
         const rotationDegrees = degrees + 90;
         arrow.style.transform = `rotate(${rotationDegrees}deg)`;
         arrow.style.transformOrigin = 'center';
@@ -180,34 +336,27 @@ class SurfApp {
     updateDetails() {
         const details = this.surfData.details;
         
-        // Wave Height (no direction needed)
         this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
         
-        // Wave Period with swell direction arrow
         const wavePeriodEl = document.getElementById('wavePeriod');
         if (wavePeriodEl) {
             wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
-            // Swell direction: show where the swell is coming FROM
-            // 90° swell = traveling east, coming from west, so arrow points left
-            const swellArrow = this.createDirectionArrow(details.swell_direction_deg, true);
+            const swellArrow = this.createDirectionArrow(details.swell_direction_deg);
             const sourceDirection = (details.swell_direction_deg + 180) % 360;
             swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
             wavePeriodEl.appendChild(swellArrow);
         }
         
-        // Wind Speed with wind direction arrow  
         const windSpeedEl = document.getElementById('windSpeed');
         if (windSpeedEl) {
             const windSpeedKts = Math.round(details.wind_speed_kts);
             windSpeedEl.innerHTML = `${windSpeedKts} kts`;
-            // Wind direction: show where the wind is coming FROM
             const windArrow = this.createDirectionArrow(details.wind_direction_deg);
             const sourceDirection = (details.wind_direction_deg + 180) % 360;
             windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
             windSpeedEl.appendChild(windArrow);
         }
         
-        // Tide State (no direction needed)
         this.updateElement('tideState', details.tide_state);
     }
 
@@ -269,12 +418,7 @@ class SurfApp {
             if (icon) {
                 icon.textContent = enabled ? '☑' : '☐';
                 checkbox.setAttribute('aria-checked', enabled.toString());
-                console.log('Checkbox updated:', enabled ? 'checked ☑' : 'unchecked ☐'); // Debug log
-            } else {
-                console.error('Checkbox icon not found');
             }
-        } else {
-            console.error('Notification checkbox element not found');
         }
     }
 
@@ -307,7 +451,6 @@ class SurfApp {
         const now = Date.now();
         const oneHour = 60 * 60 * 1000;
 
-        // Don't spam notifications - only send once per hour
         if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
             return;
         }
@@ -325,10 +468,10 @@ class SurfApp {
         localStorage.setItem('surf-last-notification', now.toString());
     }
 
-    showLoading(show) {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.style.display = show ? 'block' : 'none';
+    hideError() {
+        const error = document.getElementById('error');
+        if (error) {
+            error.style.display = 'none';
         }
     }
 
@@ -340,15 +483,7 @@ class SurfApp {
         }
     }
 
-    hideError() {
-        const error = document.getElementById('error');
-        if (error) {
-            error.style.display = 'none';
-        }
-    }
-
     showMessage(message) {
-        // Create a temporary toast message
         const toast = document.createElement('div');
         toast.className = 'toast-message';
         toast.textContent = message;
@@ -364,6 +499,8 @@ class SurfApp {
             z-index: 1000;
             backdrop-filter: blur(10px);
             animation: slideIn 0.3s ease;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-weight: 500;
         `;
 
         document.body.appendChild(toast);
@@ -390,6 +527,7 @@ class SurfApp {
                 text-align: center;
                 z-index: 1000;
                 backdrop-filter: blur(10px);
+                font-family: 'Bricolage Grotesque', sans-serif;
             ">
                 New version available! 
                 <button onclick="window.location.reload()" style="
@@ -400,7 +538,8 @@ class SurfApp {
                     padding: 8px 16px;
                     border-radius: 5px;
                     cursor: pointer;
-                    font-family: 'DegularDisplay';
+                    font-family: 'Bricolage Grotesque';
+                    font-weight: 600;
                     letter-spacing: 1px;
                     text-transform: uppercase;
                 ">Update</button>
@@ -410,7 +549,6 @@ class SurfApp {
     }
 
     startAutoRefresh() {
-        // Refresh every 5 minutes
         setInterval(() => {
             if (!document.hidden && navigator.onLine) {
                 this.fetchSurfData();
