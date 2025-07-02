@@ -123,78 +123,190 @@ class SurfApp {
         }
     }
 
-    updateTideVisualization() {
-        const container = document.querySelector('.tide-visual-container');
-        if (!container) return;
+updateTideVisualization() {
+    const container = document.querySelector('.tide-visual-container');
+    if (!container) return;
 
-        if (this.tideWaveVisualizer) {
-            this.tideWaveVisualizer.destroy();
-        }
+    if (this.tideWaveVisualizer) {
+        this.tideWaveVisualizer.destroy();
+    }
 
-        // Use real tide data if available, otherwise use simplified tide state
-        const tideData = this.surfData.tides || {
-            current_height_ft: parseFloat(this.surfData.details?.tide_height) || 3,
-            state: this.surfData.details?.tide_state || 'Unknown'
+    // Prepare tide data in the expected format for the enhanced chart
+    let tideDataForChart;
+    
+    if (this.surfData.tides && this.surfData.tides.previous_low) {
+        // Use the real tide data structure from your API
+        tideDataForChart = {
+            tides: this.surfData.tides,
+            current_height_ft: this.surfData.tides.current_height_ft || 3,
+            state: this.surfData.tides.state || 'Unknown'
         };
-
-        // Replace TideWaveVisualizer with EnhancedTideChart
-        this.tideWaveVisualizer = new EnhancedTideChart(container, tideData);
-        this.updateTideMarkers();
+    } else {
+        // Fallback to basic tide data
+        tideDataForChart = {
+            current_height_ft: parseFloat(this.surfData.details?.tide_height_ft) || 3,
+            state: this.surfData.details?.tide_state || 'Unknown',
+            tides: {
+                // Create a sample previous_low for fallback
+                previous_low: {
+                    time: "4:16 AM",
+                    timestamp: new Date().toISOString().slice(0, 10) + " 04:16"
+                },
+                cycle_info: {
+                    cycle_duration_hours: 12.4,
+                    range_ft: 6
+                }
+            }
+        };
     }
 
-    updateTideMarkers() {
-        const markersContainer = document.getElementById('tideMarkers');
-        if (!markersContainer) return;
+    // Create the enhanced tide chart with real data
+    this.tideWaveVisualizer = new EnhancedTideChart(container, tideDataForChart);
+}
 
-        markersContainer.innerHTML = '';
+// Also update the updateTideCard method to show next 2 tides in the predictions
+updateTideCard() {
+    // Only show tide card if we have detailed tide data
+    if (!this.surfData.tides && !this.surfData.details?.tide_state) return;
 
-        // Add markers based on available data
-        if (this.surfData.tides) {
-            // Full tide data available
-            if (this.surfData.tides.next_high) {
-                const highMarker = document.createElement('div');
-                highMarker.className = 'tide-marker';
-                highMarker.textContent = this.surfData.tides.next_high.time;
-                highMarker.style.left = '75%';
-                highMarker.style.top = '10px';
-                markersContainer.appendChild(highMarker);
+    const tideCard = document.getElementById('tideCard');
+    const tideHeight = document.getElementById('tideHeight');
+    const tideStateFull = document.getElementById('tideStateFull');
+    const nextHighTime = document.getElementById('nextHighTime');
+    const nextHighHeight = document.getElementById('nextHighHeight');
+    const nextLowTime = document.getElementById('nextLowTime');
+    const nextLowHeight = document.getElementById('nextLowHeight');
+
+    tideCard.style.display = 'block';
+
+    // Current height and state
+    const currentHeight = this.surfData.tides?.current_height_ft || 
+                         parseFloat(this.surfData.details?.tide_height_ft) || 3;
+    const displayHeight = !isNaN(currentHeight) ? currentHeight.toFixed(1) : '--';
+    
+    tideHeight.textContent = `${displayHeight} ft`;
+    tideStateFull.textContent = this.surfData.tides?.state || 
+                               this.surfData.details?.tide_state || 'Unknown';
+
+    // Calculate next 2 tides from the chart data
+    if (this.surfData.tides?.previous_low) {
+        const nextTides = this.calculateNextTweTides();
+        
+        if (nextTides.length > 0) {
+            const firstTide = nextTides[0];
+            if (firstTide.isHigh) {
+                nextHighTime.textContent = firstTide.time;
+                nextHighHeight.textContent = `${firstTide.height} ft`;
+                
+                if (nextTides.length > 1) {
+                    const secondTide = nextTides[1];
+                    nextLowTime.textContent = secondTide.time;
+                    nextLowHeight.textContent = `${secondTide.height} ft`;
+                }
+            } else {
+                nextLowTime.textContent = firstTide.time;
+                nextLowHeight.textContent = `${firstTide.height} ft`;
+                
+                if (nextTides.length > 1) {
+                    const secondTide = nextTides[1];
+                    nextHighTime.textContent = secondTide.time;
+                    nextHighHeight.textContent = `${secondTide.height} ft`;
+                }
             }
-
-            if (this.surfData.tides.next_low) {
-                const lowMarker = document.createElement('div');
-                lowMarker.className = 'tide-marker';
-                lowMarker.textContent = this.surfData.tides.next_low.time;
-                lowMarker.style.left = '25%';
-                lowMarker.style.bottom = '10px';
-                markersContainer.appendChild(lowMarker);
-            }
+        }
+    } else {
+        // Use existing next_high/next_low if available
+        if (this.surfData.tides?.next_high) {
+            nextHighTime.textContent = this.surfData.tides.next_high.time || '--';
+            const highHeight = parseFloat(this.surfData.tides.next_high.height);
+            const displayHighHeight = !isNaN(highHeight) ? highHeight.toFixed(1) : '--';
+            nextHighHeight.textContent = `${displayHighHeight} ft`;
         } else {
-            // Simplified markers for basic tide state
-            const highMarker = document.createElement('div');
-            highMarker.className = 'tide-marker';
-            highMarker.textContent = 'High';
-            highMarker.style.left = '75%';
-            highMarker.style.top = '10px';
-            markersContainer.appendChild(highMarker);
-
-            const lowMarker = document.createElement('div');
-            lowMarker.className = 'tide-marker';
-            lowMarker.textContent = 'Low';
-            lowMarker.style.left = '25%';
-            lowMarker.style.bottom = '10px';
-            markersContainer.appendChild(lowMarker);
+            nextHighTime.textContent = '--';
+            nextHighHeight.textContent = '-- ft';
         }
 
-        // Current time marker
-        const currentMarker = document.createElement('div');
-        currentMarker.className = 'tide-marker';
-        currentMarker.textContent = 'NOW';
-        currentMarker.style.left = '50%';
-        currentMarker.style.top = '50%';
-        currentMarker.style.transform = 'translate(-50%, -50%)';
-        currentMarker.style.background = 'rgba(211, 47, 47, 0.9)';
-        markersContainer.appendChild(currentMarker);
+        if (this.surfData.tides?.next_low) {
+            nextLowTime.textContent = this.surfData.tides.next_low.time || '--';
+            const lowHeight = parseFloat(this.surfData.tides.next_low.height);
+            const displayLowHeight = !isNaN(lowHeight) ? lowHeight.toFixed(1) : '--';
+            nextLowHeight.textContent = `${displayLowHeight} ft`;
+        } else {
+            nextLowTime.textContent = '--';
+            nextLowHeight.textContent = '-- ft';
+        }
     }
+}
+
+// Helper method to calculate next two tides
+calculateNextTweTides() {
+    if (!this.surfData.tides?.previous_low) return [];
+    
+    const tides = [];
+    const tideCycleMin = (this.surfData.tides.cycle_info?.cycle_duration_hours || 12.4) * 60;
+    const halfCycle = tideCycleMin / 2;
+    const tideRange = this.surfData.tides.cycle_info?.range_ft || 6;
+    const avgHeight = this.surfData.tides.current_height_ft || 3;
+    
+    // Parse previous low
+    const firstLow = new Date(this.surfData.tides.previous_low.timestamp + " GMT-0000");
+    const lowTideOffset = firstLow.getHours() * 60 + firstLow.getMinutes();
+    
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Calculate next tide times
+    let nextLowMin = lowTideOffset;
+    let nextHighMin = lowTideOffset + halfCycle;
+    
+    // Advance to future tides
+    while (nextLowMin < currentMinutes) {
+        nextLowMin += tideCycleMin;
+    }
+    while (nextHighMin < currentMinutes) {
+        nextHighMin += tideCycleMin;
+    }
+    
+    // Estimate heights (this could be more sophisticated)
+    const lowHeight = Math.max(0.1, avgHeight - tideRange/2);
+    const highHeight = avgHeight + tideRange/2;
+    
+    // Determine order and create array
+    if (nextLowMin < nextHighMin) {
+        tides.push({
+            time: this.formatTimeFromMinutes(nextLowMin),
+            height: lowHeight.toFixed(1),
+            isHigh: false
+        });
+        tides.push({
+            time: this.formatTimeFromMinutes(nextHighMin),
+            height: highHeight.toFixed(1),
+            isHigh: true
+        });
+    } else {
+        tides.push({
+            time: this.formatTimeFromMinutes(nextHighMin),
+            height: highHeight.toFixed(1),
+            isHigh: true
+        });
+        tides.push({
+            time: this.formatTimeFromMinutes(nextLowMin),
+            height: lowHeight.toFixed(1),
+            isHigh: false
+        });
+    }
+    
+    return tides;
+}
+
+// Helper method to format time from minutes
+formatTimeFromMinutes(minutes) {
+    const hours = Math.floor(minutes / 60) % 24;
+    const mins = Math.floor(minutes % 60);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    return `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`;
+}
 
     getErrorMessage(error) {
         if (error.name === 'AbortError') {
@@ -317,50 +429,53 @@ class SurfApp {
         return directions[index];
     }
 
-    createDirectionArrow(degrees) {
-        const arrow = document.createElement('span');
-        arrow.textContent = '→';
-        arrow.style.fontFamily = 'Bricolage Grotesque, sans-serif';
-        arrow.style.fontSize = '1em';
-        arrow.style.display = 'inline-block';
-        arrow.style.marginLeft = '6px';
-        arrow.style.color = '#000';
-        arrow.style.transition = 'all 0.3s ease';
-        arrow.style.fontWeight = '600';
-        
-        const rotationDegrees = degrees + 90;
-        arrow.style.transform = `rotate(${rotationDegrees}deg)`;
-        arrow.style.transformOrigin = 'center';
-        
-        return arrow;
-    }
+createDirectionArrow(degrees) {
+    const arrow = document.createElement('span');
+    arrow.textContent = '→';
+    arrow.style.fontFamily = 'Bricolage Grotesque, sans-serif';
+    arrow.style.fontSize = '1em';
+    arrow.style.display = 'inline-block';
+    arrow.style.marginLeft = '6px';
+    arrow.style.color = '#000';
+    arrow.style.transition = 'all 0.3s ease';
+    arrow.style.fontWeight = '600';
+    
+    // REVERTED: Back to original rotation
+    const rotationDegrees = degrees + 90;
+    arrow.style.transform = `rotate(${rotationDegrees}deg)`;
+    arrow.style.transformOrigin = 'center';
+    
+    return arrow;
+}
 
-    updateDetails() {
-        const details = this.surfData.details;
-        
-        this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
-        
-        const wavePeriodEl = document.getElementById('wavePeriod');
-        if (wavePeriodEl) {
-            wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
-            const swellArrow = this.createDirectionArrow(details.swell_direction_deg);
-            const sourceDirection = (details.swell_direction_deg + 180) % 360;
-            swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
-            wavePeriodEl.appendChild(swellArrow);
-        }
-        
-        const windSpeedEl = document.getElementById('windSpeed');
-        if (windSpeedEl) {
-            const windSpeedKts = Math.round(details.wind_speed_kts);
-            windSpeedEl.innerHTML = `${windSpeedKts} kts`;
-            const windArrow = this.createDirectionArrow(details.wind_direction_deg);
-            const sourceDirection = (details.wind_direction_deg + 180) % 360;
-            windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
-            windSpeedEl.appendChild(windArrow);
-        }
-        
-        this.updateElement('tideState', details.tide_state);
+updateDetails() {
+    const details = this.surfData.details;
+    
+    this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
+    
+    const wavePeriodEl = document.getElementById('wavePeriod');
+    if (wavePeriodEl) {
+        wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
+        const swellArrow = this.createDirectionArrow(details.swell_direction_deg);
+        const sourceDirection = (details.swell_direction_deg + 180) % 360;
+        swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
+        wavePeriodEl.appendChild(swellArrow);
     }
+    
+    const windSpeedEl = document.getElementById('windSpeed');
+    if (windSpeedEl) {
+        const windSpeedKts = Math.round(details.wind_speed_kts);
+        windSpeedEl.innerHTML = `${windSpeedKts} kts`;
+        const windArrow = this.createDirectionArrow(details.wind_direction_deg);
+        
+        // REVERTED: Back to original wind direction logic
+        const sourceDirection = (details.wind_direction_deg + 180) % 360;
+        windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
+        windSpeedEl.appendChild(windArrow);
+    }
+    
+    this.updateElement('tideState', details.tide_state);
+}
 
     formatTimestamp(timestamp) {
         const date = new Date(timestamp);
