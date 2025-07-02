@@ -1,4 +1,4 @@
-// Visual effects for surf condition detail cards
+// Visual effects for surf condition detail cards - FIXED VERSION
 
 // Wave Height Visualizer with solid color
 function updateWaveHeightVisual(waveHeight) {
@@ -38,13 +38,17 @@ function updateWaveHeightVisual(waveHeight) {
         transparent 100%)`;
 }
 
-// Wind Speed Visualizer with directional animation
+// Wind Speed Visualizer with directional animation - FIXED
 function updateWindVisual(windSpeed, windDirection) {
     const container = document.getElementById('windLinesContainer');
     if (!container) return;
     
-    // Clear existing lines
+    // Clear existing lines and styles
     container.innerHTML = '';
+    
+    // Remove any existing dynamic styles for wind
+    const existingWindStyles = document.querySelectorAll('style[data-animation^="windFlow_"]');
+    existingWindStyles.forEach(style => style.remove());
     
     // Calculate number of lines based on wind speed
     const numLines = Math.min(Math.max(Math.floor(windSpeed / 3), 1), 8);
@@ -55,53 +59,67 @@ function updateWindVisual(windSpeed, windDirection) {
     // Use the SAME direction as the arrow - where wind is coming FROM
     const windFromDirection = (windDirection + 180) % 360;
     
-    // Calculate movement vector based on direction
-    const radians = (windFromDirection - 90) * (Math.PI / 180);
-    const distance = 300; // Movement distance
-    const deltaX = Math.cos(radians) * distance;
-    const deltaY = Math.sin(radians) * distance;
+    // Create a single animation that moves within container bounds
+    const animationName = `windFlow_${windFromDirection.toFixed(0)}`;
+    
+    // Create constrained movement - keep lines within container
+    const style = document.createElement('style');
+    style.setAttribute('data-animation', animationName);
+    
+    // Calculate movement that stays within bounds
+    const containerWidth = 100; // percentage based
+    const containerHeight = 100; // percentage based
+    
+    // Simplified directional movement - horizontal flow based on wind direction
+    let startX, endX, startY, endY;
+    
+    if (windFromDirection >= 315 || windFromDirection < 45) {
+        // North wind - left to right
+        startX = -20; startY = 20; endX = 120; endY = 80;
+    } else if (windFromDirection >= 45 && windFromDirection < 135) {
+        // East wind - top to bottom  
+        startX = 20; startY = -20; endX = 80; endY = 120;
+    } else if (windFromDirection >= 135 && windFromDirection < 225) {
+        // South wind - right to left
+        startX = 120; startY = 80; endX = -20; endY = 20;
+    } else {
+        // West wind - bottom to top
+        startX = 80; startY = 120; endX = 20; endY = -20;
+    }
+    
+    style.textContent = `
+        @keyframes ${animationName} {
+            0% { 
+                left: ${startX}%;
+                top: ${startY}%;
+                opacity: 0; 
+            }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { 
+                left: ${endX}%;
+                top: ${endY}%;
+                opacity: 0; 
+            }
+        }
+    `;
+    document.head.appendChild(style);
     
     for (let i = 0; i < numLines; i++) {
         const line = document.createElement('div');
         line.className = 'wind-line';
         
-        // Lines span full card with rotation
-        const height = 2; // Fixed height
-        const width = 200; // Full span width
-        const startTop = Math.random() * 120 - 10; // Start outside container
-        const startLeft = Math.random() * 120 - 10; // Start outside container
+        // Fixed dimensions for consistency
+        const height = 2;
+        const width = Math.random() * 30 + 40; // 40-70px width
         const delay = Math.random() * animationDuration;
         
-        // Create keyframe animation for this specific direction
-        const animationName = `windFlow_${windFromDirection.toFixed(0)}`;
-        
-        // Check if this animation already exists, if not create it
-        if (!document.querySelector(`style[data-animation="${animationName}"]`)) {
-            const style = document.createElement('style');
-            style.setAttribute('data-animation', animationName);
-            style.textContent = `
-                @keyframes ${animationName} {
-                    0% { 
-                        transform: rotate(${windFromDirection}deg) translate(0px, 0px);
-                        opacity: 0; 
-                    }
-                    10% { opacity: 1; }
-                    90% { opacity: 1; }
-                    100% { 
-                        transform: rotate(${windFromDirection}deg) translate(${deltaX}px, ${deltaY}px);
-                        opacity: 0; 
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
         line.style.cssText = `
+            position: absolute;
             width: ${width}px;
             height: ${height}px;
-            top: ${startTop}%;
-            left: ${startLeft}%;
-            transform-origin: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1px;
             animation: ${animationName} ${animationDuration}s linear infinite;
             animation-delay: ${delay}s;
             opacity: ${0.2 + (windSpeed / 30) * 0.3};
@@ -111,13 +129,17 @@ function updateWindVisual(windSpeed, windDirection) {
     }
 }
 
-// Wave Period Visualizer with directional waves
+// Wave Period Visualizer with directional waves - FIXED
 function updatePeriodVisual(period, swellDirection) {
     const container = document.getElementById('periodVisualContainer');
     if (!container) return;
     
-    // Clear existing waves
+    // Clear existing waves and styles
     container.innerHTML = '';
+    
+    // Remove any existing dynamic styles for period
+    const existingPeriodStyles = document.querySelectorAll('style[data-animation^="periodFlow_"]');
+    existingPeriodStyles.forEach(style => style.remove());
     
     // Create period waves that move in swell direction
     const numWaves = Math.min(Math.max(Math.floor(12 / period), 2), 6);
@@ -125,55 +147,68 @@ function updatePeriodVisual(period, swellDirection) {
     // Use the SAME direction as the arrow - where swell is coming FROM
     const swellFromDirection = (swellDirection + 180) % 360;
     
-    // Calculate movement vector based on direction
-    const radians = (swellFromDirection - 90) * (Math.PI / 180);
-    const distance = 200; // Movement distance
-    const deltaX = Math.cos(radians) * distance;
-    const deltaY = Math.sin(radians) * distance;
+    const animationName = `periodFlow_${swellFromDirection.toFixed(0)}`;
+    
+    // Create constrained movement for waves
+    const style = document.createElement('style');
+    style.setAttribute('data-animation', animationName);
+    
+    // Calculate wave movement that stays within bounds
+    let startX, endX, startY, endY;
+    
+    if (swellFromDirection >= 315 || swellFromDirection < 45) {
+        // North swell - top to bottom
+        startX = 20; startY = -10; endX = 80; endY = 110;
+    } else if (swellFromDirection >= 45 && swellFromDirection < 135) {
+        // East swell - left to right
+        startX = -10; startY = 20; endX = 110; endY = 80;
+    } else if (swellFromDirection >= 135 && swellFromDirection < 225) {
+        // South swell - bottom to top
+        startX = 80; startY = 110; endX = 20; endY = -10;
+    } else {
+        // West swell - right to left
+        startX = 110; startY = 80; endX = -10; endY = 20;
+    }
+    
+    style.textContent = `
+        @keyframes ${animationName} {
+            0% { 
+                left: ${startX}%;
+                top: ${startY}%;
+                opacity: 0.3;
+                transform: scaleX(1);
+            }
+            50% { 
+                left: ${(startX + endX) / 2}%;
+                top: ${(startY + endY) / 2}%;
+                opacity: 0.8;
+                transform: scaleX(1.2);
+            }
+            100% { 
+                left: ${endX}%;
+                top: ${endY}%;
+                opacity: 0.3;
+                transform: scaleX(1);
+            }
+        }
+    `;
+    document.head.appendChild(style);
     
     for (let i = 0; i < numWaves; i++) {
         const wave = document.createElement('div');
         wave.className = 'period-wave';
         
-        // Waves span full card with rotation
-        const width = 180; // Full span width
-        const height = 3; // Slightly thicker for waves
-        const startTop = Math.random() * 120 - 10; // Start outside container
-        const startLeft = Math.random() * 120 - 10; // Start outside container
+        // Fixed dimensions
+        const width = Math.random() * 40 + 60; // 60-100px width
+        const height = 3;
         const delay = i * (period / numWaves);
         
-        // Create keyframe animation for this specific direction
-        const animationName = `periodFlow_${swellFromDirection.toFixed(0)}`;
-        
-        // Check if this animation already exists, if not create it
-        if (!document.querySelector(`style[data-animation="${animationName}"]`)) {
-            const style = document.createElement('style');
-            style.setAttribute('data-animation', animationName);
-            style.textContent = `
-                @keyframes ${animationName} {
-                    0% { 
-                        transform: rotate(${swellFromDirection}deg) translate(0px, 0px) scaleX(1);
-                        opacity: 0.3; 
-                    }
-                    50% { 
-                        transform: rotate(${swellFromDirection}deg) translate(${deltaX * 0.5}px, ${deltaY * 0.5}px) scaleX(1.2);
-                        opacity: 0.8; 
-                    }
-                    100% { 
-                        transform: rotate(${swellFromDirection}deg) translate(${deltaX}px, ${deltaY}px) scaleX(1);
-                        opacity: 0.3; 
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
         wave.style.cssText = `
+            position: absolute;
             width: ${width}px;
             height: ${height}px;
-            top: ${startTop}%;
-            left: ${startLeft}%;
-            transform-origin: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1px;
             animation: ${animationName} ${period}s ease-in-out infinite;
             animation-delay: ${delay}s;
         `;

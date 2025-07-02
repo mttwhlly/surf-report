@@ -61,7 +61,8 @@ class SurfApp {
             }
             if (this.tideWaveVisualizer) {
                 setTimeout(() => {
-                    this.tideWaveVisualizer.setupCanvas();
+                    // Use the new resize method for EnhancedTideChart
+                    this.tideWaveVisualizer.resize();
                 }, 100);
             }
         });
@@ -123,8 +124,8 @@ class SurfApp {
     }
 
     updateTideVisualization() {
-        const canvas = document.getElementById('tideWaveCanvas');
-        if (!canvas) return;
+        const container = document.querySelector('.tide-visual-container');
+        if (!container) return;
 
         if (this.tideWaveVisualizer) {
             this.tideWaveVisualizer.destroy();
@@ -136,7 +137,8 @@ class SurfApp {
             state: this.surfData.details?.tide_state || 'Unknown'
         };
 
-        this.tideWaveVisualizer = new TideWaveVisualizer(canvas, tideData);
+        // Replace TideWaveVisualizer with EnhancedTideChart
+        this.tideWaveVisualizer = new EnhancedTideChart(container, tideData);
         this.updateTideMarkers();
     }
 
@@ -557,9 +559,12 @@ class SurfApp {
     }
 }
 
+// Make app instance globally accessible for the tide chart
+window.app = null;
+
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new SurfApp();
+    window.app = new SurfApp();
 });
 
 // Add CSS for toast animation
