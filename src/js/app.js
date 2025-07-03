@@ -190,31 +190,137 @@ class SurfApp {
     }
 
     setupEventListeners() {
-        const refreshBtn = document.getElementById('refreshBtn');
-        const notificationCheckbox = document.getElementById('notificationCheckbox');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const notificationBell = document.getElementById('notificationBell'); // Correct ID
 
-        refreshBtn?.addEventListener('click', () => this.fetchSurfData());
-        notificationCheckbox?.addEventListener('click', () => this.toggleNotifications());
+    refreshBtn?.addEventListener('click', () => this.fetchSurfData());
+    notificationBell?.addEventListener('click', () => this.toggleNotifications());
 
-        window.addEventListener('online', () => this.fetchSurfData());
-        window.addEventListener('offline', () => this.showOfflineMessage());
+    // Add keyboard support for the bell
+    notificationBell?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.toggleNotifications();
+        }
+    });
 
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                this.fetchSurfData();
+    window.addEventListener('online', () => this.fetchSurfData());
+    window.addEventListener('offline', () => this.showOfflineMessage());
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            this.fetchSurfData();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (this.waveAnimation) {
+            setTimeout(() => this.waveAnimation.resize(), 100);
+        }
+        if (this.tideWaveVisualizer) {
+            setTimeout(() => {
+                this.tideWaveVisualizer.resize();
+            }, 100);
+        }
+    });
+}
+
+async toggleNotifications() {
+    console.log('🔔 Toggle notifications clicked, current state:', this.notificationsEnabled);
+    
+    if (!('Notification' in window)) {
+        this.showMessage('This browser does not support notifications');
+        return;
+    }
+
+    if (!this.notificationsEnabled) {
+        const permission = await Notification.requestPermission();
+        console.log('📱 Permission result:', permission);
+        
+        if (permission === 'granted') {
+            this.notificationsEnabled = true;
+            this.updateNotificationBell(true);
+            this.saveNotificationPreference();
+            this.showMessage('🔔 Notifications enabled! You\'ll be alerted when surf\'s up.');
+        } else {
+            this.showMessage('Notifications permission denied');
+        }
+    } else {
+        this.notificationsEnabled = false;
+        this.updateNotificationBell(false);
+        this.saveNotificationPreference();
+        this.showMessage('🔕 Notifications disabled');
+    }
+}
+
+    updateNotificationBell(enabled) {
+        const bell = document.getElementById('notificationBell');
+        console.log('🔔 Updating bell, enabled:', enabled, 'element found:', !!bell);
+        
+        if (bell) {
+            const iconElement = bell.querySelector('.bell-icon');
+            console.log('🔔 Icon element found:', !!iconElement);
+            
+            if (iconElement) {
+                if (enabled) {
+                    // Show enabled bell icon (regular bell)
+                    iconElement.textContent = '🔔';
+                    bell.classList.add('enabled');
+                    bell.classList.remove('disabled');
+                    bell.setAttribute('title', 'Notifications Enabled - Click to Disable');
+                    console.log('🔔 Set to enabled state');
+                } else {
+                    // Show disabled bell icon (bell with slash)
+                    iconElement.textContent = '🔕';
+                    bell.classList.add('disabled');
+                    bell.classList.remove('enabled');
+                    bell.setAttribute('title', 'Notifications Disabled - Click to Enable');
+                    console.log('🔕 Set to disabled state');
+                }
+                
+                // Update ARIA attributes for accessibility
+                bell.setAttribute('aria-pressed', enabled.toString());
+                bell.setAttribute('aria-label', enabled ? 'Notifications enabled' : 'Notifications disabled');
             }
+        }
+    }
+
+    loadNotificationPreference() {
+        const enabled = localStorage.getItem('surf-notifications-enabled') === 'true';
+        console.log('📱 Loading notification preference:', enabled);
+        
+        if (enabled && Notification.permission === 'granted') {
+            this.notificationsEnabled = true;
+            this.updateNotificationBell(true);
+        } else {
+            this.notificationsEnabled = false;
+            this.updateNotificationBell(false);
+        }
+    }
+
+    // Also update the sendNotification method to use bell emoji
+    sendNotification() {
+        if (!this.notificationsEnabled || Notification.permission !== 'granted') return;
+
+        const lastNotification = localStorage.getItem('surf-last-notification');
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+
+        if (lastNotification && (now - parseInt(lastNotification)) < oneHour) {
+            return;
+        }
+
+        new Notification('🏄‍♂️ Great Surf Conditions!', {
+            body: `${this.surfData.location}: ${this.surfData.rating} conditions with ${this.surfData.details.wave_height_ft}ft waves!`,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-96.png',
+            vibrate: [200, 100, 200, 100, 200],
+            tag: 'surf-conditions',
+            requireInteraction: false,
+            silent: false
         });
 
-        window.addEventListener('resize', () => {
-            if (this.waveAnimation) {
-                setTimeout(() => this.waveAnimation.resize(), 100);
-            }
-            if (this.tideWaveVisualizer) {
-                setTimeout(() => {
-                    this.tideWaveVisualizer.resize();
-                }, 100);
-            }
-        });
+        localStorage.setItem('surf-last-notification', now.toString());
     }
 
     async fetchSurfData() {

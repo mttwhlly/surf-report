@@ -51,16 +51,133 @@
 }
 
 /* Notification Checkbox */
-.notification-checkbox {
+.notification-bell {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
     user-select: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+    background: transparent !important; /* Remove button background */
+    border: none !important; /* Remove button border */
+    border-radius: 50%; /* Circular hover area */
 }
 
-.notification-checkbox:focus {
-    outline: 2px solid #000;
-    outline-offset: 2px;
+.notification-bell:focus {
+    outline: none; /* Remove focus outline */
+    background: rgba(255, 255, 255, 0.1) !important; /* Subtle focus background */
+}
+
+.notification-bell:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1) !important; /* Subtle hover background */
+}
+
+.notification-bell:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.bell-icon {
+    font-family: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    font-size: 24px; /* Bigger icon */
+    font-weight: 700; /* Heavier weight */
+    line-height: 1;
+    transition: all 0.3s ease;
+    color: #000; /* Darker color */
+    /* Force monochrome rendering for consistent theming */
+    font-variant-emoji: text;
+    -webkit-font-feature-settings: normal;
+    font-feature-settings: normal;
+    filter: contrast(1.2) brightness(0.8); /* Make it darker/heavier */
+}
+
+/* Disabled state */
+.notification-bell.disabled .bell-icon {
+    opacity: 0.6;
+    filter: contrast(1.2) brightness(0.8) grayscale(0.4);
+}
+
+/* Enabled state */
+.notification-bell.enabled .bell-icon {
+    opacity: 1;
+    filter: contrast(1.2) brightness(0.8);
+    color: #059669; /* Green when enabled */
+}
+
+/* Hover animation for enabled state */
+.notification-bell.enabled:hover .bell-icon {
+    animation: bellRing 0.5s ease-in-out;
+    filter: contrast(1.3) brightness(0.7); /* Even more pronounced on hover */
+}
+
+/* Bell ring animation */
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: rotate(-3deg); }
+    20%, 40%, 60%, 80% { transform: rotate(3deg); }
+}
+
+/* Dark theme adjustments */
+body.dark-gradient .bell-icon {
+    color: #ffffff; /* White icons on dark backgrounds */
+    filter: contrast(1.3) brightness(1.1); /* Brighter on dark */
+}
+
+body.dark-gradient .notification-bell.enabled .bell-icon {
+    color: #10b981; /* Bright green on dark */
+    filter: contrast(1.3) brightness(1.1);
+}
+
+body.dark-gradient .notification-bell.disabled .bell-icon {
+    opacity: 0.7;
+    filter: contrast(1.3) brightness(1.1) grayscale(0.3);
+}
+
+body.dark-gradient .notification-bell:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.dark-gradient .notification-bell:focus {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Light theme adjustments */
+body.light-gradient .bell-icon {
+    color: #000000; /* Black icons on light backgrounds */
+    filter: contrast(1.4) brightness(0.6); /* Much darker on light */
+}
+
+body.light-gradient .notification-bell.enabled .bell-icon {
+    color: #047857; /* Dark green on light */
+    filter: contrast(1.4) brightness(0.6);
+}
+
+body.light-gradient .notification-bell.disabled .bell-icon {
+    opacity: 0.5;
+    filter: contrast(1.4) brightness(0.6) grayscale(0.5);
+}
+
+body.light-gradient .notification-bell:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-gradient .notification-bell:focus {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .notification-bell.enabled:hover .bell-icon {
+        animation: none;
+    }
+    
+    .bell-icon {
+        transition: none;
+    }
 }
 
 .checkbox-icon {
