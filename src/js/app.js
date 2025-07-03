@@ -69,7 +69,7 @@ class SurfApp {
             weather: {
                 air_temperature_f: '-',
                 water_temperature_f: '-',
-                weather_code: 0,
+                weather_code: null, // Use null to trigger dash placeholder
                 weather_description: 'Loading...'
             },
             tides: {
@@ -527,13 +527,54 @@ class SurfApp {
     }
 
     getWeatherIcon(weatherCode) {
+        // Return circle for loading state
+        if (weatherCode === null || weatherCode === undefined) {
+            return '○'; // Noto circle outline for loading state
+        }
+        
+        // Using Noto Color Emoji for consistent cross-platform appearance
         const iconMap = {
-            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
-            51: '🌦️', 53: '🌦️', 55: '🌧️', 56: '🌨️', 57: '🌨️',
-            61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '🌨️', 67: '🌨️',
-            71: '🌨️', 73: '❄️', 75: '❄️', 77: '🌨️',
-            80: '🌦️', 81: '🌧️', 82: '⛈️', 85: '🌨️', 86: '❄️',
-            95: '⛈️', 96: '⛈️', 99: '⛈️'
+            // Clear and partly cloudy
+            0: '☀️',   // Clear sky - sun
+            1: '🌤️',   // Mainly clear - sun behind small cloud
+            2: '⛅',   // Partly cloudy - sun behind cloud
+            3: '☁️',   // Overcast - cloud
+            
+            // Fog
+            45: '🌫️',  // Fog - fog symbol
+            48: '🌫️',  // Depositing rime fog - fog symbol
+            
+            // Drizzle
+            51: '🌦️',  // Light drizzle - sun behind rain cloud
+            53: '🌦️',  // Moderate drizzle - sun behind rain cloud  
+            55: '🌧️',  // Dense drizzle - rain cloud
+            56: '🌨️',  // Light freezing drizzle - snow cloud
+            57: '🌨️',  // Dense freezing drizzle - snow cloud
+            
+            // Rain
+            61: '🌧️',  // Slight rain - rain cloud
+            63: '🌧️',  // Moderate rain - rain cloud
+            65: '🌧️',  // Heavy rain - rain cloud
+            66: '🌨️',  // Light freezing rain - snow cloud
+            67: '🌨️',  // Heavy freezing rain - snow cloud
+            
+            // Snow
+            71: '🌨️',  // Slight snow fall - snow cloud
+            73: '❄️',  // Moderate snow fall - snowflake
+            75: '❄️',  // Heavy snow fall - snowflake
+            77: '🌨️',  // Snow grains - snow cloud
+            
+            // Showers
+            80: '🌦️',  // Slight rain showers - sun behind rain cloud
+            81: '🌧️',  // Moderate rain showers - rain cloud
+            82: '⛈️',  // Violent rain showers - storm cloud
+            85: '🌨️',  // Slight snow showers - snow cloud
+            86: '❄️',  // Heavy snow showers - snowflake
+            
+            // Thunderstorm
+            95: '⛈️',  // Thunderstorm - storm cloud with lightning
+            96: '⛈️',  // Thunderstorm with slight hail - storm cloud
+            99: '⛈️'   // Thunderstorm with heavy hail - storm cloud
         };
         return iconMap[weatherCode] || '🌤️';
     }

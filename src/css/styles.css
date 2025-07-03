@@ -1,5 +1,9 @@
 /* Base styles and typography for SURF LAB */
 
+/* Import Google Fonts - Noto Emoji (black/monochrome) */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300;400;500;600;700&display=swap');
+
 @font-face {
     font-family: 'DegularDisplay';
     src: url('../fonts/DegularDisplay-Light.woff2') format('woff2');
@@ -30,6 +34,23 @@ body {
 .title {
     font-weight: 300;
     font-variation-settings: "opsz" 20;
+}
+
+/* Weather icon styling with Noto Emoji (black/monochrome) */
+.weather-icon {
+    font-family: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+    font-size: 24px;
+    margin-left: 16px;;
+    color: inherit; /* Use text color instead of emoji color */
+    font-weight: 400;
+    /* Disable emoji color rendering to get black icons */
+    font-variant-emoji: text;
+    -webkit-font-feature-settings: normal;
+    font-feature-settings: normal;
 }
 
 /* Full width wave container */
@@ -81,6 +102,11 @@ body.dark-gradient .detail-value {
     color: #ffffff;
 }
 
+/* Weather icons adapt to theme */
+body.dark-gradient .weather-icon {
+    color: #ffffff;
+}
+
 /* Adjust for light gradients (midday, fog, etc.) */
 body.light-gradient .status-card,
 body.light-gradient .detail-item,
@@ -93,6 +119,10 @@ body.light-gradient .tide-card {
 body.light-gradient .location,
 body.light-gradient .rating,
 body.light-gradient .detail-value {
+    color: #000000;
+}
+
+body.light-gradient .weather-icon {
     color: #000000;
 }
 
@@ -140,6 +170,24 @@ body.light-gradient .top-controls .btn {
 
 #blob-background-container {
     transform: translateZ(-1px); /* Push deeper */
+}
+
+/* Enhanced emoji support for cross-platform consistency */
+.weather-icon, 
+.notification-checkbox .checkbox-icon {
+    font-family: 'Noto Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-variant-emoji: text; /* Force black/monochrome rendering */
+    -webkit-font-feature-settings: normal;
+    font-feature-settings: normal;
+}
+
+/* Ensure weather icons maintain consistent size and positioning */
+.weather-icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1em;
+    height: 1em;
+    line-height: 1;
 }
 
 /* Responsive Design */
