@@ -29,7 +29,7 @@ class EnhancedTideChart {
         this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         this.svg.setAttribute('width', '100%');
         this.svg.setAttribute('height', '100%');
-        this.svg.setAttribute('viewBox', `2 0 1440 ${this.height * 9}`);
+        this.svg.setAttribute('viewBox', `4 0 1440 ${this.height * 9}`);
         this.svg.setAttribute('class', 'tide-chart-svg');
         this.svg.setAttribute('preserveAspectRatio', 'none');
         
@@ -57,7 +57,7 @@ class EnhancedTideChart {
             .tide-curve {
                 fill: none;
                 stroke: rgba(0, 0, 0, 1);
-                stroke-width: 2;
+                stroke-width: 1;
                 stroke-linecap: round;
                 vector-effect: non-scaling-stroke;
             }
@@ -67,14 +67,14 @@ class EnhancedTideChart {
             }
             .current-time-line {
                 stroke: #000;
-                stroke-width: 2;
+                stroke-width: 1;
                 stroke-dasharray: 8,8;
                 vector-effect: non-scaling-stroke;
             }
             .tide-marker {
                 r: 6;
                 stroke: rgba(255, 255, 255, 0.9);
-                stroke-width: 3;
+                stroke-width: 1;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 vector-effect: non-scaling-stroke;
