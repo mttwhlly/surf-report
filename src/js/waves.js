@@ -89,7 +89,7 @@ class WaveAnimation {
                 speed: this.speed,
                 phase: 0,
                 color: 'white',
-                strokeColor: 'rgba(0, 0, 0, 0.2)'
+                strokeColor: 'black'
             },
             {
                 amplitude: this.amplitude * 0.7,
@@ -97,7 +97,7 @@ class WaveAnimation {
                 speed: this.speed * 1.5,
                 phase: Math.PI / 3,
                 color: 'white',
-                strokeColor: 'rgba(0, 0, 0, 0.2)'
+                strokeColor: 'black'
             },
             {
                 amplitude: this.amplitude * 0.4,
@@ -105,7 +105,7 @@ class WaveAnimation {
                 speed: this.speed * 2.2,
                 phase: Math.PI / 2,
                 color: 'white',
-                strokeColor: 'rgba(0, 0, 0, 0.2)'
+                strokeColor: 'black'
             }
         ];
     }

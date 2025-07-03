@@ -308,7 +308,7 @@ class DynamicBlobBackground {
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);
                 background: rgba(255, 255, 255, 0.85);
-                border: 1px solid rgba(0, 0, 0, 0.1);
+                border: none;
                 box-shadow: 
                     0 8px 32px rgba(0, 0, 0, 0.1),
                     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -447,7 +447,7 @@ class DynamicBlobBackground {
         const shape = shapes[Math.floor(Math.random() * shapes.length)];
         
         // Higher opacity for single blob (0.4 to 0.8)
-        const opacity = 0.4 + Math.random() * 0.4;
+        const opacity = 0.2;
         
         // Random animation delay
         const delay = Math.random() * 5;
