@@ -495,42 +495,51 @@ async toggleNotifications() {
         }
     }
 
-    updateTideVisualization() {
-        const container = document.querySelector('.tide-visual-container');
-        if (!container) return;
+updateTideVisualization() {
+    const container = document.querySelector('.tide-visual-container');
+    if (!container) return;
 
-        if (this.tideWaveVisualizer) {
-            this.tideWaveVisualizer.destroy();
-        }
-
-        // Prepare tide data
-        let tideDataForChart;
-        
-        if (this.surfData.tides && this.surfData.tides.previous_low) {
-            tideDataForChart = {
-                tides: this.surfData.tides,
-                current_height_ft: this.surfData.tides.current_height_ft || 3,
-                state: this.surfData.tides.state || 'Unknown'
-            };
-        } else {
-            tideDataForChart = {
-                current_height_ft: parseFloat(this.surfData.details?.tide_height_ft) || 3,
-                state: this.surfData.details?.tide_state || 'Unknown',
-                tides: {
-                    previous_low: {
-                        time: "4:16 AM",
-                        timestamp: new Date().toISOString().slice(0, 10) + " 04:16"
-                    },
-                    cycle_info: {
-                        cycle_duration_hours: 12.4,
-                        range_ft: 6
-                    }
-                }
-            };
-        }
-
-        this.tideWaveVisualizer = new EnhancedTideChart(container, tideDataForChart);
+    if (this.tideWaveVisualizer) {
+        this.tideWaveVisualizer.destroy();
     }
+
+    // Use API tide data when available
+    let tideDataForChart;
+    
+    if (this.surfData && this.surfData.tides && this.surfData.tides.current_height_ft) {
+        // Use real API tide data
+        tideDataForChart = {
+            current_height_ft: this.surfData.tides.current_height_ft,
+            state: this.surfData.tides.state,
+            tides: {
+                next_high: this.surfData.tides.next_high,
+                next_low: this.surfData.tides.next_low,
+                previous_high: this.surfData.tides.previous_high,
+                previous_low: this.surfData.tides.previous_low,
+                cycle_info: this.surfData.tides.cycle_info || {
+                    cycle_duration_hours: 12.4,
+                    range_ft: 4
+                }
+            }
+        };
+        console.log('🌊 Creating tide chart with API data:', tideDataForChart);
+    } else {
+        // Fallback data for loading state
+        tideDataForChart = {
+            current_height_ft: 2.0,
+            state: 'Loading',
+            tides: {
+                cycle_info: {
+                    cycle_duration_hours: 12.4,
+                    range_ft: 4
+                }
+            }
+        };
+        console.log('🌊 Creating tide chart with fallback data');
+    }
+
+    this.tideWaveVisualizer = new EnhancedTideChart(container, tideDataForChart);
+}
 
     getErrorMessage(error) {
         if (error.name === 'AbortError') {
@@ -579,12 +588,31 @@ updateTideCard() {
     const tideCard = document.getElementById('tideCard');
     if (!tideCard) return;
     
-    // Get realistic tide data
-    const realisticTideData = window.tideCalculator ? 
-        window.tideCalculator.getCurrentTideState() : 
-        this.getFallbackTideData();
-    
-    console.log('🌊 Updating tide card with realistic data:', realisticTideData);
+    // Use actual API tide data when available
+    let tideData;
+    if (this.surfData && this.surfData.tides && this.surfData.tides.current_height_ft !== undefined) {
+        // Use real API data
+        tideData = {
+            currentHeight: this.surfData.tides.current_height_ft,
+            state: this.surfData.tides.state,
+            nextHigh: this.surfData.tides.next_high ? {
+                time: this.surfData.tides.next_high.time,
+                height: this.surfData.tides.next_high.height
+            } : null,
+            nextLow: this.surfData.tides.next_low ? {
+                time: this.surfData.tides.next_low.time,
+                height: this.surfData.tides.next_low.height
+            } : null
+        };
+        console.log('🌊 Using API tide data:', tideData);
+    } else {
+        // Fallback to realistic calculator for loading state only
+        const realisticTideData = window.tideCalculator ? 
+            window.tideCalculator.getCurrentTideState() : 
+            this.getFallbackTideData();
+        tideData = realisticTideData;
+        console.log('🌊 Using fallback tide data (loading state):', tideData);
+    }
     
     const tideHeight = document.getElementById('tideHeight');
     const tideStateFull = document.getElementById('tideStateFull');
@@ -597,42 +625,30 @@ updateTideCard() {
 
     // Update current tide height and state
     if (tideHeight) {
-        tideHeight.textContent = `${realisticTideData.currentHeight} ft`;
+        tideHeight.textContent = `${tideData.currentHeight} ft`;
     }
     
     if (tideStateFull) {
-        tideStateFull.textContent = realisticTideData.state;
+        tideStateFull.textContent = tideData.state.toUpperCase();
     }
 
     // Update next high tide
-    if (realisticTideData.nextHigh) {
-        if (nextHighTime) nextHighTime.textContent = realisticTideData.nextHigh.time;
-        if (nextHighHeight) nextHighHeight.textContent = `${realisticTideData.nextHigh.height} ft`;
+    if (tideData.nextHigh) {
+        if (nextHighTime) nextHighTime.textContent = tideData.nextHigh.time;
+        if (nextHighHeight) nextHighHeight.textContent = `${tideData.nextHigh.height} ft`;
     } else {
         if (nextHighTime) nextHighTime.textContent = '--';
         if (nextHighHeight) nextHighHeight.textContent = '-- ft';
     }
 
     // Update next low tide
-    if (realisticTideData.nextLow) {
-        if (nextLowTime) nextLowTime.textContent = realisticTideData.nextLow.time;
-        if (nextLowHeight) nextLowHeight.textContent = `${realisticTideData.nextLow.height} ft`;
+    if (tideData.nextLow) {
+        if (nextLowTime) nextLowTime.textContent = tideData.nextLow.time;
+        if (nextLowHeight) nextLowHeight.textContent = `${tideData.nextLow.height} ft`;
     } else {
         if (nextLowTime) nextLowTime.textContent = '--';
         if (nextLowHeight) nextLowHeight.textContent = '-- ft';
     }
-}
-
-updateTideVisualization() {
-    const container = document.querySelector('.tide-visual-container');
-    if (!container) return;
-
-    if (this.tideWaveVisualizer) {
-        this.tideWaveVisualizer.destroy();
-    }
-
-    // Create enhanced tide chart (it will use realistic calculations internally)
-    this.tideWaveVisualizer = new EnhancedTideChart(container, {});
 }
 
 getFallbackTideData() {
@@ -742,24 +758,143 @@ initializeTideCalculator() {
                     }
                 }
                 
-                generateTidePathForVisualization() {
-                    // Simple sine wave that matches the realistic tide times
-                    const svgWidth = 1440;
-                    const svgHeight = 1080;
+                generateTidePathFromAPIData() {
+                    const svgWidth = 1440; // 1440 minutes = 24 hours
+                    const svgHeight = this.height * 9;
                     const verticalCenter = svgHeight / 2;
                     const amplitude = svgHeight * 0.3;
                     
-                    let path = \`M 0 \${verticalCenter}\`;
+                    // Use API tide data if available
+                    if (!this.tideData.tides) {
+                        return this.generateFallbackPath();
+                    }
                     
-                    for (let x = 0; x <= svgWidth; x += 5) {
-                        // Create realistic tide curve with low at 3 PM (15:00 = 900 minutes)
+                    const tides = this.tideData.tides;
+                    const now = new Date();
+                    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                    
+                    // Convert API tide times to tide points for a complete 24-hour cycle
+                    const tidePoints = [];
+                    
+                    // Add yesterday's evening high (estimate if not provided)
+                    // For a complete cycle, add a point 12.5 hours before morning low
+                    if (tides.previous_low) {
+                        const morningLowMinutes = this.parseTimeToMinutes(tides.previous_low.time);
+                        const yesterdayHighMinutes = morningLowMinutes - (6.2 * 60); // ~6.2 hours before
+                        if (yesterdayHighMinutes < 0) {
+                            // This represents yesterday evening, but we'll show it as early morning for the 24h view
+                            tidePoints.push({ 
+                                minutes: 0, 
+                                height: 3.5, // Estimated evening high
+                                type: 'high' 
+                            });
+                        }
+                    }
+                    
+                    // Add previous low (morning - 9:07 AM = 547 minutes)
+                    if (tides.previous_low) {
+                        const time = this.parseTimeToMinutes(tides.previous_low.time);
+                        tidePoints.push({ 
+                            minutes: time, 
+                            height: tides.previous_low.height, 
+                            type: 'low' 
+                        });
+                    }
+                    
+                    // Add previous high (afternoon - 3:36 PM = 936 minutes)
+                    if (tides.previous_high) {
+                        const time = this.parseTimeToMinutes(tides.previous_high.time);
+                        tidePoints.push({ 
+                            minutes: time, 
+                            height: tides.previous_high.height, 
+                            type: 'high' 
+                        });
+                    }
+                    
+                    // Add next low (tonight - 9:51 PM = 1311 minutes)
+                    if (tides.next_low) {
+                        const time = this.parseTimeToMinutes(tides.next_low.time);
+                        tidePoints.push({ 
+                            minutes: time, 
+                            height: tides.next_low.height, 
+                            type: 'low' 
+                        });
+                    }
+                    
+                    // Add next high (tomorrow morning) - extend beyond 24h for smooth curve
+                    if (tides.next_high) {
+                        let time = this.parseTimeToMinutes(tides.next_high.time);
+                        // Since it's 3:43 AM tomorrow, add 24 hours to position it correctly
+                        if (time < currentMinutes) {
+                            time += 1440; // Add 24 hours for tomorrow
+                        }
+                        tidePoints.push({ 
+                            minutes: time, 
+                            height: tides.next_high.height, 
+                            type: 'high' 
+                        });
+                    }
+                    
+                    // Sort by time
+                    tidePoints.sort((a, b) => a.minutes - b.minutes);
+                    
+                    console.log('🌊 Complete tide points for 24h chart:', tidePoints);
+                    
+                    // Find height range for proper scaling
+                    const heights = tidePoints.map(p => p.height);
+                    const minHeight = Math.min(...heights);
+                    const maxHeight = Math.max(...heights);
+                    const heightRange = maxHeight - minHeight;
+                    const centerHeight = (minHeight + maxHeight) / 2;
+                    
+                    let path = `M 0 ${verticalCenter}`;
+                    
+                    // Generate smooth curve through all tide points
+                    for (let x = 0; x <= svgWidth; x += 3) {
                         const minute = x;
-                        const tidePhase = ((minute - 900) / 360) * Math.PI; // 6-hour cycle
-                        const height = 2.0 + 1.5 * Math.sin(tidePhase); // 0.5 to 3.5 ft range
-                        const y = verticalCenter - ((height - 2) / 3) * amplitude;
+                        let height = this.tideData.current_height_ft || centerHeight;
+                        
+                        // Find surrounding tide points for this minute
+                        let beforePoint = null;
+                        let afterPoint = null;
+                        
+                        for (let i = 0; i < tidePoints.length; i++) {
+                            if (tidePoints[i].minutes <= minute) {
+                                beforePoint = tidePoints[i];
+                            }
+                            if (tidePoints[i].minutes > minute && !afterPoint) {
+                                afterPoint = tidePoints[i];
+                                break;
+                            }
+                        }
+                        
+                        // Handle edge cases
+                        if (!beforePoint && afterPoint) {
+                            // Before first point - extrapolate backward
+                            const nextPoint = tidePoints[1] || afterPoint;
+                            const timeDiff = afterPoint.minutes;
+                            const progress = minute / timeDiff;
+                            height = afterPoint.height - (afterPoint.height - nextPoint.height) * (1 - progress);
+                        } else if (beforePoint && !afterPoint) {
+                            // After last point - use last known height or extrapolate
+                            height = beforePoint.height;
+                        } else if (beforePoint && afterPoint) {
+                            // Between two points - smooth interpolation
+                            const totalDuration = afterPoint.minutes - beforePoint.minutes;
+                            const elapsed = minute - beforePoint.minutes;
+                            const progress = elapsed / totalDuration;
+                            
+                            // Use cosine interpolation for natural tide curve
+                            const heightDiff = afterPoint.height - beforePoint.height;
+                            height = beforePoint.height + (heightDiff * (1 - Math.cos(progress * Math.PI)) / 2);
+                        }
+                        
+                        // Convert height to SVG coordinates with proper scaling
+                        const normalizedHeight = (height - centerHeight) / (heightRange / 2);
+                        const y = verticalCenter - (normalizedHeight * amplitude);
                         
                         if (!isNaN(y) && isFinite(y)) {
-                            path += \` L \${x} \${y.toFixed(1)}\`;
+                            path += ` L ${x} ${y.toFixed(1)}`;
                         }
                     }
                     
