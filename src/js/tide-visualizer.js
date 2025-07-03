@@ -20,7 +20,7 @@ class EnhancedTideChart {
         
         // Create SVG element with proper viewBox for tide data
         this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        this.svg.setAttribute('viewBox', `0 0 1440 ${this.height * 9}`); // Scale to match tide data
+        this.svg.setAttribute('viewBox', `2 0 1440 ${this.height * 9}`); // Scale to match tide data
         this.svg.setAttribute('class', 'tide-chart-svg');
         this.svg.setAttribute('preserveAspectRatio', 'none');
         this.svg.style.width = '100%';

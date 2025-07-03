@@ -52,6 +52,7 @@
     <div class="container">
         <div class="header">
             <div class="location" id="location">Loading...</div>
+            <div class="weather-icon" id="weatherIcon">☀️</div>
             <div class="timestamp" id="timestamp"></div>
         </div>
 
@@ -66,7 +67,7 @@
             </div>
 
             <!-- Weather Conditions Card -->
-            <div class="weather-card" id="weatherCard" style="display: none;">
+            <!-- <div class="weather-card" id="weatherCard" style="display: none;">
                 <div class="weather-icon" id="weatherIcon">☀️</div>
                 <div class="weather-description" id="weatherDescription">Clear sky</div>
                 
@@ -86,13 +87,52 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <!-- Enhanced Tide Information Card with Static Sine Wave -->
+            <div class="details-grid">
+                <!-- Wave Height with solid color background -->
+                <div class="detail-item" id="waveHeightCard">
+                    <div class="detail-visual-bg" id="waveHeightBg"></div>
+                    <div class="detail-label">Wave Height</div>
+                    <div class="detail-value" id="waveHeight">-</div>
+                </div>
+                
+                <!-- Period with swell direction and wave animation -->
+                <div class="detail-item" id="periodCard">
+                    <div class="period-visual-container" id="periodVisualContainer"></div>
+                    <div class="detail-label">Period</div>
+                    <div class="detail-value" id="wavePeriod">-</div>
+                </div>
+                
+                <!-- Wind Speed with animated lines matching direction -->
+                <div class="detail-item" id="windSpeedCard">
+                    <div class="wind-lines-container" id="windLinesContainer"></div>
+                    <div class="detail-label">Wind Speed</div>
+                    <div class="detail-value" id="windSpeed">-</div>
+                </div>
+                <div class="detail-item" id="weatherCard">
+                    <div class="temperature-grid">
+                        <div class="temp-item">
+                            <div class="temp-label">Air</div>
+                            <div class="temp-value">
+                                <span id="airTemp">--</span>
+                                <span class="temp-unit">°F</span>
+                            </div>
+                        </div>
+                        <div class="temp-item">
+                            <div class="temp-label">Water</div>
+                            <div class="temp-value">
+                                <span id="waterTemp">--</span>
+                            <span class="temp-unit">°F</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                    <!-- Enhanced Tide Information Card with Static Sine Wave -->
             <div class="tide-card" id="tideCard" style="display: none;">
                 <div class="tide-header">
-                    <div class="tide-icon">🌊</div>
-                    <div class="tide-title">Tide Conditions</div>
+                    <div class="tide-title">Tide</div>
                 </div>
                 
                 <div class="tide-current">
@@ -119,36 +159,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="details-grid">
-                <!-- Wave Height with solid color background -->
-                <div class="detail-item" id="waveHeightCard">
-                    <div class="detail-visual-bg" id="waveHeightBg"></div>
-                    <div class="detail-label">Wave Height</div>
-                    <div class="detail-value" id="waveHeight">-</div>
-                </div>
-                
-                <!-- Period with swell direction and wave animation -->
-                <div class="detail-item" id="periodCard">
-                    <div class="period-visual-container" id="periodVisualContainer"></div>
-                    <div class="detail-label">Period</div>
-                    <div class="detail-value" id="wavePeriod">-</div>
-                </div>
-                
-                <!-- Wind Speed with animated lines matching direction -->
-                <div class="detail-item" id="windSpeedCard">
-                    <div class="wind-lines-container" id="windLinesContainer"></div>
-                    <div class="detail-label">Wind Speed</div>
-                    <div class="detail-value" id="windSpeed">-</div>
-                </div>
-                
-                <!-- Tide State -->
-                <div class="detail-item">
-                    <div class="detail-label">Tide State</div>
-                    <div class="detail-value" id="tideState">-</div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Scripts -->

@@ -108,19 +108,19 @@ class SurfApp {
         this.updateTideVisualization();
         
         // Update wave height background
-        if (this.surfData.details?.wave_height_ft) {
-            updateWaveHeightVisual(this.surfData.details.wave_height_ft);
-        }
+        // if (this.surfData.details?.wave_height_ft) {
+        //     updateWaveHeightVisual(this.surfData.details.wave_height_ft);
+        // }
         
         // Update wind lines
-        if (this.surfData.details?.wind_speed_kts && this.surfData.details?.wind_direction_deg) {
-            updateWindVisual(this.surfData.details.wind_speed_kts, this.surfData.details.wind_direction_deg);
-        }
+        // if (this.surfData.details?.wind_speed_kts && this.surfData.details?.wind_direction_deg) {
+        //     updateWindVisual(this.surfData.details.wind_speed_kts, this.surfData.details.wind_direction_deg);
+        // }
 
         // Update period visualization
-        if (this.surfData.details?.wave_period_sec && this.surfData.details?.swell_direction_deg) {
-            updatePeriodVisual(this.surfData.details.wave_period_sec, this.surfData.details.swell_direction_deg);
-        }
+        // if (this.surfData.details?.wave_period_sec && this.surfData.details?.swell_direction_deg) {
+        //     updatePeriodVisual(this.surfData.details.wave_period_sec, this.surfData.details.swell_direction_deg);
+        // }
     }
 
 updateTideVisualization() {
@@ -353,18 +353,18 @@ formatTimeFromMinutes(minutes) {
     updateWeatherCard() {
         if (!this.surfData.weather) return;
 
-        const weatherCard = document.getElementById('weatherCard');
+        // const weatherCard = document.getElementById('weatherCard');
         const weatherIcon = document.getElementById('weatherIcon');
-        const weatherDescription = document.getElementById('weatherDescription');
+        // const weatherDescription = document.getElementById('weatherDescription');
         const airTemp = document.getElementById('airTemp');
         const waterTemp = document.getElementById('waterTemp');
 
-        weatherCard.style.display = 'block';
+        // weatherCard.style.display = 'block';
 
         const icon = this.getWeatherIcon(this.surfData.weather.weather_code);
         weatherIcon.textContent = icon;
 
-        weatherDescription.textContent = this.surfData.weather.weather_description;
+        // weatherDescription.textContent = this.surfData.weather.weather_description;
 
         airTemp.textContent = Math.round(this.surfData.weather.air_temperature_f);
         waterTemp.textContent = Math.round(this.surfData.weather.water_temperature_f);
@@ -474,7 +474,6 @@ updateDetails() {
         windSpeedEl.appendChild(windArrow);
     }
     
-    this.updateElement('tideState', details.tide_state);
 }
 
     formatTimestamp(timestamp) {

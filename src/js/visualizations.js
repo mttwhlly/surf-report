@@ -1,6 +1,7 @@
 // Wave Height Visualizer with solid color
 function updateWaveHeightVisual(waveHeight) {
     const waveHeightBg = document.getElementById('waveHeightBg');
+    console.log('Updating wave height visual with height:', waveHeightBg, waveHeight);
     if (!waveHeightBg) return;
     
     // Historical range for St. Augustine (approximate)
@@ -11,32 +12,37 @@ function updateWaveHeightVisual(waveHeight) {
     const percentage = Math.min(Math.max((waveHeight - minHeight) / (maxHeight - minHeight), 0), 1);
     
     // Solid color based on wave height with opacity
-    let color, opacity;
+    const color = '0, 0, 0'; // Black for all wave heights
+    const opacity = 0.1 + (percentage * 0.4); // Scale opacity from 0.1 to 0.5
     
-    if (percentage < 0.25) {
-        color = '59, 130, 246'; // Blue for small waves
-        opacity = 0.1 + (percentage * 0.4);
-    } else if (percentage < 0.5) {
-        color = '76, 175, 80'; // Green for medium waves
-        opacity = 0.15 + (percentage * 0.4);
-    } else if (percentage < 0.75) {
-        color = '255, 152, 0'; // Orange for large waves
-        opacity = 0.2 + (percentage * 0.4);
-    } else {
-        color = '244, 67, 54'; // Red for huge waves
-        opacity = 0.25 + (percentage * 0.4);
-    }
+    // if (percentage < 0.25) {
+    //     color = '59, 130, 246'; // Blue for small waves
+    //     opacity = 0.1 + (percentage * 0.4);
+    // } else if (percentage < 0.5) {
+    //     color = '76, 175, 80'; // Green for medium waves
+    //     opacity = 0.15 + (percentage * 0.4);
+    // } else if (percentage < 0.75) {
+    //     color = '255, 152, 0'; // Orange for large waves
+    //     opacity = 0.2 + (percentage * 0.4);
+    // } else {
+    //     color = '244, 67, 54'; // Red for huge waves
+    //     opacity = 0.25 + (percentage * 0.4);
+    // }
     
     // Solid color that fills from bottom based on wave height
-    const fillHeight = Math.max(10, percentage * 100);
-    waveHeightBg.style.background = `linear-gradient(to top, 
-        rgba(${color}, ${opacity}) 0%, 
-        rgba(${color}, ${opacity}) ${fillHeight}%, 
-        transparent ${fillHeight}%, 
-        transparent 100%)`;
+    const fillHeight = Math.max(10, percentage);
+    waveHeightBg.style.background = `
+        linear-gradient(to bottom, 
+            white 0%, 
+            white calc(${100 - fillHeight}% - 0.5px), 
+            black calc(${100 - fillHeight}% - 0.5px), 
+            black calc(${100 - fillHeight}% + 0.5px), 
+            white calc(${100 - fillHeight}% + 0.5px), 
+            white 100%)
+    `;
 }
 
-// Wind Speed Visualizer using Wind Animation Web Component (Line-based)
+// Wind Speed Visualizer using Wind Animation Web Component
 function updateWindVisual(windSpeed, windDirection) {
     const container = document.getElementById('windLinesContainer');
     if (!container) return;
@@ -53,12 +59,16 @@ function updateWindVisual(windSpeed, windDirection) {
     
     // Calculate intensity based on wind speed
     const normalizedSpeed = Math.min(Math.max(windSpeed, 0), 40); // Clamp between 0-40 knots
-    const intensity = 0.2 + (normalizedSpeed / 40) * 0.4; // Scale intensity from 0.2 to 0.6
+    const intensity = 0.2 + (normalizedSpeed / 40) * 0.6; // Scale intensity from 0.2 to 0.8
+    
+    // Choose animation style based on wind speed
+    const animationStyle = windSpeed > 15 ? "streamlines" : "particles";
     
     // Set attributes for the wind animation
     windElement.setAttribute('direction', windDirection);
     windElement.setAttribute('speed', windSpeed);
     windElement.setAttribute('intensity', intensity.toFixed(2));
+    windElement.setAttribute('style', animationStyle);
     
     // Style the element to fill the container
     windElement.style.cssText = `

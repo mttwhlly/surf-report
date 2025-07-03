@@ -181,7 +181,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
-    margin-top: 15px;
 }
 
 .temp-item {
@@ -193,15 +192,15 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.8;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 12;
 }
 
 .temp-value {
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 28;
 }
@@ -294,8 +293,8 @@
 }
 
 .tide-height {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 32;
     margin-bottom: 5px;
