@@ -163,7 +163,7 @@
 }
 
 .weather-icon {
-    font-size: 48px;
+    font-size: 32px;
     margin-bottom: 10px;
     line-height: 1;
 }
@@ -175,12 +175,6 @@
     font-family: 'Bricolage Grotesque', sans-serif;
     text-transform: capitalize;
     font-variation-settings: "opsz" 18;
-}
-
-.temperature-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
 }
 
 .temp-item {
@@ -203,6 +197,8 @@
     font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 28;
+    display: flex;
+    justify-content: center;
 }
 
 .temp-unit {
@@ -239,10 +235,12 @@
 }
 
 .tide-title {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 18;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .tide-visual-container {

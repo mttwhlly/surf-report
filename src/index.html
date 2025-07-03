@@ -52,7 +52,13 @@
     <div class="container">
         <div class="header">
             <div class="location" id="location">Loading...</div>
-            <div class="weather-icon" id="weatherIcon">☀️</div>
+                <div class="temp-item">
+                    <div class="temp-value">
+                        <span id="airTemp">--</span>
+                        <span class="temp-unit">°F</span>
+                        <div class="weather-icon" id="weatherIcon">☀️</div>
+                    </div>
+                </div>
             <div class="timestamp" id="timestamp"></div>
         </div>
 
@@ -112,13 +118,6 @@
                 </div>
                 <div class="detail-item" id="weatherCard">
                     <div class="temperature-grid">
-                        <div class="temp-item">
-                            <div class="temp-label">Air</div>
-                            <div class="temp-value">
-                                <span id="airTemp">--</span>
-                                <span class="temp-unit">°F</span>
-                            </div>
-                        </div>
                         <div class="temp-item">
                             <div class="temp-label">Water</div>
                             <div class="temp-value">

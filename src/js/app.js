@@ -108,19 +108,19 @@ class SurfApp {
         this.updateTideVisualization();
         
         // Update wave height background
-        // if (this.surfData.details?.wave_height_ft) {
-        //     updateWaveHeightVisual(this.surfData.details.wave_height_ft);
-        // }
+        if (this.surfData.details?.wave_height_ft) {
+            updateWaveHeightVisual(this.surfData.details.wave_height_ft);
+        }
         
         // Update wind lines
-        // if (this.surfData.details?.wind_speed_kts && this.surfData.details?.wind_direction_deg) {
-        //     updateWindVisual(this.surfData.details.wind_speed_kts, this.surfData.details.wind_direction_deg);
-        // }
+        if (this.surfData.details?.wind_speed_kts && this.surfData.details?.wind_direction_deg) {
+            updateWindVisual(this.surfData.details.wind_speed_kts, this.surfData.details.wind_direction_deg);
+        }
 
         // Update period visualization
-        // if (this.surfData.details?.wave_period_sec && this.surfData.details?.swell_direction_deg) {
-        //     updatePeriodVisual(this.surfData.details.wave_period_sec, this.surfData.details.swell_direction_deg);
-        // }
+        if (this.surfData.details?.wave_period_sec && this.surfData.details?.swell_direction_deg) {
+            updatePeriodVisual(this.surfData.details.wave_period_sec, this.surfData.details.swell_direction_deg);
+        }
     }
 
 updateTideVisualization() {

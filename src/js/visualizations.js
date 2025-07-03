@@ -1,7 +1,7 @@
 // Wave Height Visualizer with solid color
 function updateWaveHeightVisual(waveHeight) {
     const waveHeightBg = document.getElementById('waveHeightBg');
-    console.log('Updating wave height visual with height:', waveHeightBg, waveHeight);
+    // console.log('Updating wave height visual with height:', waveHeightBg, waveHeight);
     if (!waveHeightBg) return;
     
     // Historical range for St. Augustine (approximate)
@@ -14,20 +14,6 @@ function updateWaveHeightVisual(waveHeight) {
     // Solid color based on wave height with opacity
     const color = '0, 0, 0'; // Black for all wave heights
     const opacity = 0.1 + (percentage * 0.4); // Scale opacity from 0.1 to 0.5
-    
-    // if (percentage < 0.25) {
-    //     color = '59, 130, 246'; // Blue for small waves
-    //     opacity = 0.1 + (percentage * 0.4);
-    // } else if (percentage < 0.5) {
-    //     color = '76, 175, 80'; // Green for medium waves
-    //     opacity = 0.15 + (percentage * 0.4);
-    // } else if (percentage < 0.75) {
-    //     color = '255, 152, 0'; // Orange for large waves
-    //     opacity = 0.2 + (percentage * 0.4);
-    // } else {
-    //     color = '244, 67, 54'; // Red for huge waves
-    //     opacity = 0.25 + (percentage * 0.4);
-    // }
     
     // Solid color that fills from bottom based on wave height
     const fillHeight = Math.max(10, percentage);
