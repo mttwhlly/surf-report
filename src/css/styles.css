@@ -16,9 +16,11 @@
 
 body {
     font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: white;
+    /* background: white; */
     color: #000;
     min-height: 100vh;
+    transition: background 3s ease-in-out;
+    background-attachment: fixed;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -45,6 +47,90 @@ body {
     width: 100%;
     height: 100%;
     display: block;
+}
+
+/* Ensure content is readable over gradients */
+.container, .top-controls {
+    position: relative;
+    z-index: 10;
+}
+
+/* Enhanced glass morphism effects over gradients */
+.status-card, .detail-item, .weather-card, .tide-card, .top-controls {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Adjust for dark gradients (night, storms, etc.) */
+body.dark-gradient .status-card,
+body.dark-gradient .detail-item,
+body.dark-gradient .weather-card,
+body.dark-gradient .tide-card {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+body.dark-gradient .location,
+body.dark-gradient .rating,
+body.dark-gradient .detail-value {
+    color: #ffffff;
+}
+
+/* Adjust for light gradients (midday, fog, etc.) */
+body.light-gradient .status-card,
+body.light-gradient .detail-item,
+body.light-gradient .weather-card,
+body.light-gradient .tide-card {
+    background: rgba(255, 255, 255, 0.25);
+    color: #000000;
+}
+
+body.light-gradient .location,
+body.light-gradient .rating,
+body.light-gradient .detail-value {
+    color: #000000;
+}
+
+/* Wave canvas adjustments */
+.wave-container {
+    opacity: 0.6;
+    mix-blend-mode: overlay;
+}
+
+/* Text contrast adjustments */
+.rating, .location, .detail-value {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient-specific adjustments */
+body.sunset .rating,
+body.sunrise .rating,
+body.golden-hour .rating {
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+body.midday .rating,
+body.light-clouds .rating,
+body.fog .rating {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Top controls adjustments */
+body.dark-gradient .top-controls .btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.light-gradient .top-controls .btn {
+    background: rgba(255, 255, 255, 0.8);
+    color: #000000;
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive Design */

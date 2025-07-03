@@ -19,12 +19,12 @@ function updateWaveHeightVisual(waveHeight) {
     const fillHeight = Math.max(10, percentage);
     waveHeightBg.style.background = `
         linear-gradient(to bottom, 
-            white 0%, 
-            white calc(${100 - fillHeight}% - 0.5px), 
-            black calc(${100 - fillHeight}% - 0.5px), 
-            black calc(${100 - fillHeight}% + 0.5px), 
-            white calc(${100 - fillHeight}% + 0.5px), 
-            white 100%)
+            transparent 0%, 
+            transparent calc(${100 - fillHeight}% - 0.5px), 
+            rgba(0, 0, 0, 1) calc(${100 - fillHeight}% - 0.5px), 
+            rgba(0, 0, 0, 1) calc(${100 - fillHeight}% + 0.5px), 
+            transparent calc(${100 - fillHeight}% + 0.5px), 
+            transparent 100%)
     `;
 }
 
