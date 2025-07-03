@@ -1,10 +1,12 @@
-const CACHE_NAME = 'surf-conditions-v1.5.0';
-const DYNAMIC_CACHE = 'surf-dynamic-v1.5.0';
+const CACHE_NAME = 'surf-conditions-v1.6.0';
+const DYNAMIC_CACHE = 'surf-dynamic-v1.6.0';
 
 // Only cache files that actually exist
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/css/animations.css',
+  '/css/components.css',
   '/css/styles.css',
   '/js/app.js',
   '/js/blob-background.js',
