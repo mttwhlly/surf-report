@@ -1,5 +1,5 @@
-const CACHE_NAME = 'surf-conditions-v1.3.0';
-const DYNAMIC_CACHE = 'surf-dynamic-v1.3.0';
+const CACHE_NAME = 'surf-conditions-v1.4.0';
+const DYNAMIC_CACHE = 'surf-dynamic-v1.4.0';
 
 // Only cache files that actually exist
 const STATIC_ASSETS = [
@@ -7,7 +7,12 @@ const STATIC_ASSETS = [
   '/index.html',
   '/css/styles.css',
   '/js/app.js',
+  '/js/blob-background.js',
+  '/js/swell-animation.js',
+  '/js/tide-visualizer.js',
+  '/js/visualizations.js',
   '/js/waves.js',
+  '/js/wind-animation.js',
   '/manifest.json'
   // Removed icon references until they're generated
 ];
