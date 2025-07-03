@@ -504,3 +504,162 @@ body.light-gradient .weather-icon {
         -moz-osx-font-smoothing: grayscale;
     }
 }
+
+.bell-icon {
+    font-family: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #000;
+    transition: all 0.3s ease;
+    
+    /* Prevent double rendering */
+    font-variant-emoji: presentation; /* Use emoji presentation */
+    -webkit-font-feature-settings: normal;
+    font-feature-settings: normal;
+    
+    /* Remove any pseudo-elements that might cause doubles */
+    position: relative;
+}
+
+/* Remove any pseudo-element styling that might cause doubles */
+.bell-icon::before,
+.bell-icon::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Ensure only the text content shows */
+.bell-icon {
+    overflow: hidden;
+}
+
+/* Safari-specific emoji rendering */
+@supports (-webkit-appearance: none) {
+    .bell-icon {
+        -webkit-font-smoothing: antialiased;
+        font-variant-emoji: presentation;
+        text-rendering: optimizeLegibility;
+    }
+}
+
+/* Fix SVG tide chart for Safari */
+.tide-chart-svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    
+    /* Safari SVG rendering fixes */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    
+    /* Ensure proper scaling */
+    max-width: 100%;
+    max-height: 100%;
+    
+    /* Safari-specific SVG fixes */
+    shape-rendering: geometricPrecision;
+    text-rendering: geometricPrecision;
+}
+
+/* Safari SVG path rendering */
+.tide-curve {
+    vector-effect: non-scaling-stroke !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+.tide-fill {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Tide visual container Safari fixes */
+.tide-visual-container {
+    position: relative;
+    height: 120px;
+    margin: 15px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* Safari rendering improvements */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    isolation: isolate;
+    contain: layout style paint;
+}
+
+/* Ensure SVG container has proper dimensions */
+.tide-visual-container svg {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+}
+
+/* Force hardware acceleration for smooth rendering */
+.tide-visual-container,
+.tide-chart-svg,
+.bell-icon {
+    will-change: auto;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+}
+
+/* Safari notification bell container */
+.notification-bell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 50%;
+    
+    /* Safari-specific fixes */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+
+/* Safari hover states */
+.notification-bell:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Theme-specific Safari adjustments */
+body.dark-gradient .bell-icon {
+    color: #ffffff;
+    text-shadow: none;
+}
+
+body.dark-gradient .notification-bell.enabled .bell-icon {
+    color: #10b981;
+}
+
+body.light-gradient .bell-icon {
+    color: #000000;
+    text-shadow: none;
+}
+
+body.light-gradient .notification-bell.enabled .bell-icon {
+    color: #047857;
+}
