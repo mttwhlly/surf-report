@@ -5,16 +5,166 @@ class SurfApp {
         this.API_URL = 'https://c0cgocok00o40c48c40k8g04.mttwhlly.cc/surfability';
         this.waveAnimation = null;
         this.tideWaveVisualizer = null;
+        this.isDataLoading = false;
         
         this.init();
     }
 
     async init() {
+        // Initialize UI immediately with placeholders
+        this.initializeUI();
+        
+        // Start background systems
         await this.registerServiceWorker();
         this.setupEventListeners();
         this.loadNotificationPreference();
-        await this.fetchSurfData();
+        
+        // Start wave animation with default parameters
+        this.startWaveAnimation();
+        
+        // Fetch real data asynchronously
+        this.fetchSurfData();
         this.startAutoRefresh();
+    }
+
+    initializeUI() {
+        // Show the UI immediately with placeholders
+        const surfDataEl = document.getElementById('surfData');
+        surfDataEl.style.display = 'block';
+
+        // Set initial placeholder values
+        this.updateElement('location', 'St. Augustine, FL');
+        this.updateElement('timestamp', 'Loading conditions...');
+        this.updateElement('rating', 'Loading');
+        this.updateElement('duration', 'Checking current conditions...');
+
+        // Initialize placeholders with smooth loading animations
+        this.setPlaceholderData();
+        
+        // Start visualizations with default data
+        this.updateVisualizations();
+        
+        console.log('🎨 UI initialized with placeholders');
+    }
+
+    setPlaceholderData() {
+        // Create clean placeholder data with dashes for numerical values
+        const placeholderData = {
+            location: 'St. Augustine, FL',
+            timestamp: new Date().toISOString(),
+            rating: '...',
+            surfable: true,
+            score: 50, // Keep for internal calculations
+            goodSurfDuration: 'Loading forecast...',
+            details: {
+                wave_height_ft: '-',
+                wave_period_sec: '-',
+                swell_direction_deg: 90, // Keep for arrow positioning
+                wind_direction_deg: 180, // Keep for arrow positioning
+                wind_speed_kts: '-',
+                tide_state: 'Loading',
+                tide_height_ft: '-',
+                data_source: 'Loading...'
+            },
+            weather: {
+                air_temperature_f: '-',
+                water_temperature_f: '-',
+                weather_code: 0,
+                weather_description: 'Loading...'
+            },
+            tides: {
+                current_height_ft: '-',
+                state: 'Loading',
+                next_high: { time: '--', height: '-' },
+                next_low: { time: '--', height: '-' }
+            }
+        };
+
+        // Store as temporary data
+        this.surfData = placeholderData;
+        
+        // Update UI with smooth loading state
+        this.updatePlaceholderUI();
+    }
+
+    updatePlaceholderUI() {
+        // Add loading state styling
+        this.addLoadingStates();
+        
+        // Update all UI elements with placeholder data
+        this.updateRating();
+        this.updateWeatherCard();
+        this.updateTideCard();
+        this.updateDetails();
+        this.updateElement('timestamp', this.formatTimestamp(new Date().toISOString()));
+    }
+
+    addLoadingStates() {
+        // Add subtle loading animations to data elements
+        const loadingElements = [
+            'rating', 'waveHeight', 'wavePeriod', 'windSpeed', 
+            'airTemp', 'waterTemp', 'tideHeight', 'nextHighTime', 'nextLowTime'
+        ];
+
+        loadingElements.forEach(elementId => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add('loading-shimmer');
+            }
+        });
+
+        // Add shimmer animation styles if not already present
+        this.addShimmerStyles();
+    }
+
+    removeLoadingStates() {
+        // Remove loading animations when real data arrives
+        const loadingElements = document.querySelectorAll('.loading-shimmer');
+        loadingElements.forEach(element => {
+            element.classList.remove('loading-shimmer');
+        });
+    }
+
+    addShimmerStyles() {
+        if (document.getElementById('shimmer-styles')) return;
+
+        const style = document.createElement('style');
+        style.id = 'shimmer-styles';
+        style.textContent = `
+            .loading-shimmer {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .loading-shimmer::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.4) 50%,
+                    transparent 100%
+                );
+                animation: shimmer 2s ease-in-out infinite;
+                pointer-events: none;
+            }
+            
+            @keyframes shimmer {
+                0% { left: -100%; }
+                100% { left: 100%; }
+            }
+            
+            @media (prefers-reduced-motion: reduce) {
+                .loading-shimmer::after {
+                    animation: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     async registerServiceWorker() {
@@ -56,12 +206,11 @@ class SurfApp {
         });
 
         window.addEventListener('resize', () => {
-            if (this.surfData && this.waveAnimation) {
+            if (this.waveAnimation) {
                 setTimeout(() => this.waveAnimation.resize(), 100);
             }
             if (this.tideWaveVisualizer) {
                 setTimeout(() => {
-                    // Use the new resize method for EnhancedTideChart
                     this.tideWaveVisualizer.resize();
                 }, 100);
             }
@@ -69,9 +218,17 @@ class SurfApp {
     }
 
     async fetchSurfData() {
+        if (this.isDataLoading) {
+            console.log('🔄 Data fetch already in progress, skipping...');
+            return;
+        }
+
+        this.isDataLoading = true;
         this.hideError();
 
         try {
+            console.log('🌊 Fetching surf data...');
+            
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -89,16 +246,125 @@ class SurfApp {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            this.surfData = await response.json();
-            this.updateUI();
-            this.startWaveAnimation();
-            this.updateVisualizations();
-            this.checkForGoodConditions();
-
+            const newData = await response.json();
+            
+            // Smoothly update from placeholder to real data
+            this.updateDataSmoothly(newData);
+            
         } catch (error) {
             console.error('Error fetching surf data:', error);
             this.showError(this.getErrorMessage(error));
+            
+            // Keep placeholder data on error instead of hiding everything
+            this.markDataAsStale();
+        } finally {
+            this.isDataLoading = false;
         }
+    }
+
+    updateDataSmoothly(newData) {
+        console.log('📊 Updating UI with real data');
+        
+        // Remove loading states
+        this.removeLoadingStates();
+        
+        // Store new data
+        this.surfData = newData;
+        
+        // Update UI elements with smooth transitions
+        this.updateUIWithTransitions();
+        
+        // Update visualizations
+        this.updateVisualizations();
+        
+        // Update wave animation with real data
+        this.startWaveAnimation();
+        
+        // Check for notifications
+        this.checkForGoodConditions();
+        
+        console.log('✅ UI updated with real data');
+    }
+
+    updateUIWithTransitions() {
+        // Update main elements with fade effect
+        this.updateElementWithTransition('location', this.surfData.location);
+        this.updateElementWithTransition('timestamp', this.formatTimestamp(this.surfData.timestamp));
+        this.updateElementWithTransition('duration', this.surfData.goodSurfDuration);
+
+        // Update rating with special handling
+        this.updateRatingWithTransition();
+        
+        // Update cards
+        this.updateWeatherCard();
+        this.updateTideCard();
+        this.updateDetails();
+    }
+
+    updateElementWithTransition(id, content) {
+        const element = document.getElementById(id);
+        if (!element) return;
+
+        // Add transition class
+        element.style.transition = 'opacity 0.3s ease';
+        element.style.opacity = '0.7';
+        
+        setTimeout(() => {
+            element.textContent = content;
+            element.style.opacity = '1';
+        }, 150);
+    }
+
+    updateRatingWithTransition() {
+        const rating = document.getElementById('rating');
+        if (!rating) return;
+
+        // Fade out
+        rating.style.transition = 'all 0.3s ease';
+        rating.style.opacity = '0.7';
+        rating.style.transform = 'scale(0.95)';
+        
+        setTimeout(() => {
+            // Update content and class
+            rating.textContent = this.surfData.rating;
+            rating.className = `rating ${this.surfData.rating.toLowerCase()}`;
+            
+            // Fade back in
+            rating.style.opacity = '1';
+            rating.style.transform = 'scale(1)';
+        }, 150);
+    }
+
+    markDataAsStale() {
+        // Add visual indicator that data is stale/offline
+        const timestamp = document.getElementById('timestamp');
+        if (timestamp) {
+            timestamp.textContent = 'Offline - ' + this.formatTimestamp(new Date().toISOString());
+            timestamp.style.opacity = '0.7';
+        }
+        
+        // Add stale indicator to rating
+        const rating = document.getElementById('rating');
+        if (rating) {
+            rating.classList.add('stale-data');
+        }
+        
+        // Add stale data styling if not present
+        this.addStaleDataStyles();
+    }
+
+    addStaleDataStyles() {
+        if (document.getElementById('stale-data-styles')) return;
+
+        const style = document.createElement('style');
+        style.id = 'stale-data-styles';
+        style.textContent = `
+            .stale-data {
+                opacity: 0.7 !important;
+                filter: grayscale(0.3);
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     updateVisualizations() {
@@ -123,216 +389,51 @@ class SurfApp {
         }
     }
 
-updateTideVisualization() {
-    const container = document.querySelector('.tide-visual-container');
-    if (!container) return;
+    updateTideVisualization() {
+        const container = document.querySelector('.tide-visual-container');
+        if (!container) return;
 
-    if (this.tideWaveVisualizer) {
-        this.tideWaveVisualizer.destroy();
-    }
+        if (this.tideWaveVisualizer) {
+            this.tideWaveVisualizer.destroy();
+        }
 
-    // Prepare tide data in the expected format for the enhanced chart
-    let tideDataForChart;
-    
-    if (this.surfData.tides && this.surfData.tides.previous_low) {
-        // Use the real tide data structure from your API
-        tideDataForChart = {
-            tides: this.surfData.tides,
-            current_height_ft: this.surfData.tides.current_height_ft || 3,
-            state: this.surfData.tides.state || 'Unknown'
-        };
-    } else {
-        // Fallback to basic tide data
-        tideDataForChart = {
-            current_height_ft: parseFloat(this.surfData.details?.tide_height_ft) || 3,
-            state: this.surfData.details?.tide_state || 'Unknown',
-            tides: {
-                // Create a sample previous_low for fallback
-                previous_low: {
-                    time: "4:16 AM",
-                    timestamp: new Date().toISOString().slice(0, 10) + " 04:16"
-                },
-                cycle_info: {
-                    cycle_duration_hours: 12.4,
-                    range_ft: 6
-                }
-            }
-        };
-    }
-
-    // Create the enhanced tide chart with real data
-    this.tideWaveVisualizer = new EnhancedTideChart(container, tideDataForChart);
-}
-
-// Also update the updateTideCard method to show next 2 tides in the predictions
-updateTideCard() {
-    // Only show tide card if we have detailed tide data
-    if (!this.surfData.tides && !this.surfData.details?.tide_state) return;
-
-    const tideCard = document.getElementById('tideCard');
-    const tideHeight = document.getElementById('tideHeight');
-    const tideStateFull = document.getElementById('tideStateFull');
-    const nextHighTime = document.getElementById('nextHighTime');
-    const nextHighHeight = document.getElementById('nextHighHeight');
-    const nextLowTime = document.getElementById('nextLowTime');
-    const nextLowHeight = document.getElementById('nextLowHeight');
-
-    tideCard.style.display = 'block';
-
-    // Current height and state
-    const currentHeight = this.surfData.tides?.current_height_ft || 
-                         parseFloat(this.surfData.details?.tide_height_ft) || 3;
-    const displayHeight = !isNaN(currentHeight) ? currentHeight.toFixed(1) : '--';
-    
-    tideHeight.textContent = `${displayHeight} ft`;
-    tideStateFull.textContent = this.surfData.tides?.state || 
-                               this.surfData.details?.tide_state || 'Unknown';
-
-    // Calculate next 2 tides from the chart data
-    if (this.surfData.tides?.previous_low) {
-        const nextTides = this.calculateNextTweTides();
+        // Prepare tide data
+        let tideDataForChart;
         
-        if (nextTides.length > 0) {
-            const firstTide = nextTides[0];
-            if (firstTide.isHigh) {
-                nextHighTime.textContent = firstTide.time;
-                nextHighHeight.textContent = `${firstTide.height} ft`;
-                
-                if (nextTides.length > 1) {
-                    const secondTide = nextTides[1];
-                    nextLowTime.textContent = secondTide.time;
-                    nextLowHeight.textContent = `${secondTide.height} ft`;
-                }
-            } else {
-                nextLowTime.textContent = firstTide.time;
-                nextLowHeight.textContent = `${firstTide.height} ft`;
-                
-                if (nextTides.length > 1) {
-                    const secondTide = nextTides[1];
-                    nextHighTime.textContent = secondTide.time;
-                    nextHighHeight.textContent = `${secondTide.height} ft`;
-                }
-            }
-        }
-    } else {
-        // Use existing next_high/next_low if available
-        if (this.surfData.tides?.next_high) {
-            nextHighTime.textContent = this.surfData.tides.next_high.time || '--';
-            const highHeight = parseFloat(this.surfData.tides.next_high.height);
-            const displayHighHeight = !isNaN(highHeight) ? highHeight.toFixed(1) : '--';
-            nextHighHeight.textContent = `${displayHighHeight} ft`;
+        if (this.surfData.tides && this.surfData.tides.previous_low) {
+            tideDataForChart = {
+                tides: this.surfData.tides,
+                current_height_ft: this.surfData.tides.current_height_ft || 3,
+                state: this.surfData.tides.state || 'Unknown'
+            };
         } else {
-            nextHighTime.textContent = '--';
-            nextHighHeight.textContent = '-- ft';
+            tideDataForChart = {
+                current_height_ft: parseFloat(this.surfData.details?.tide_height_ft) || 3,
+                state: this.surfData.details?.tide_state || 'Unknown',
+                tides: {
+                    previous_low: {
+                        time: "4:16 AM",
+                        timestamp: new Date().toISOString().slice(0, 10) + " 04:16"
+                    },
+                    cycle_info: {
+                        cycle_duration_hours: 12.4,
+                        range_ft: 6
+                    }
+                }
+            };
         }
 
-        if (this.surfData.tides?.next_low) {
-            nextLowTime.textContent = this.surfData.tides.next_low.time || '--';
-            const lowHeight = parseFloat(this.surfData.tides.next_low.height);
-            const displayLowHeight = !isNaN(lowHeight) ? lowHeight.toFixed(1) : '--';
-            nextLowHeight.textContent = `${displayLowHeight} ft`;
-        } else {
-            nextLowTime.textContent = '--';
-            nextLowHeight.textContent = '-- ft';
-        }
+        this.tideWaveVisualizer = new EnhancedTideChart(container, tideDataForChart);
     }
-}
-
-// Helper method to calculate next two tides
-calculateNextTweTides() {
-    if (!this.surfData.tides?.previous_low) return [];
-    
-    const tides = [];
-    const tideCycleMin = (this.surfData.tides.cycle_info?.cycle_duration_hours || 12.4) * 60;
-    const halfCycle = tideCycleMin / 2;
-    const tideRange = this.surfData.tides.cycle_info?.range_ft || 6;
-    const avgHeight = this.surfData.tides.current_height_ft || 3;
-    
-    // Parse previous low
-    const firstLow = new Date(this.surfData.tides.previous_low.timestamp + " GMT-0000");
-    const lowTideOffset = firstLow.getHours() * 60 + firstLow.getMinutes();
-    
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    
-    // Calculate next tide times
-    let nextLowMin = lowTideOffset;
-    let nextHighMin = lowTideOffset + halfCycle;
-    
-    // Advance to future tides
-    while (nextLowMin < currentMinutes) {
-        nextLowMin += tideCycleMin;
-    }
-    while (nextHighMin < currentMinutes) {
-        nextHighMin += tideCycleMin;
-    }
-    
-    // Estimate heights (this could be more sophisticated)
-    const lowHeight = Math.max(0.1, avgHeight - tideRange/2);
-    const highHeight = avgHeight + tideRange/2;
-    
-    // Determine order and create array
-    if (nextLowMin < nextHighMin) {
-        tides.push({
-            time: this.formatTimeFromMinutes(nextLowMin),
-            height: lowHeight.toFixed(1),
-            isHigh: false
-        });
-        tides.push({
-            time: this.formatTimeFromMinutes(nextHighMin),
-            height: highHeight.toFixed(1),
-            isHigh: true
-        });
-    } else {
-        tides.push({
-            time: this.formatTimeFromMinutes(nextHighMin),
-            height: highHeight.toFixed(1),
-            isHigh: true
-        });
-        tides.push({
-            time: this.formatTimeFromMinutes(nextLowMin),
-            height: lowHeight.toFixed(1),
-            isHigh: false
-        });
-    }
-    
-    return tides;
-}
-
-// Helper method to format time from minutes
-formatTimeFromMinutes(minutes) {
-    const hours = Math.floor(minutes / 60) % 24;
-    const mins = Math.floor(minutes % 60);
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    return `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`;
-}
 
     getErrorMessage(error) {
         if (error.name === 'AbortError') {
-            return 'Request timed out. Please check your connection.';
+            return 'Request timed out. Showing cached data.';
         } else if (error.message.includes('Failed to fetch')) {
-            return 'Unable to connect. Check your internet connection.';
+            return 'Connection lost. Showing offline data.';
         } else {
-            return `Failed to load surf conditions: ${error.message}`;
+            return `Using cached data: ${error.message}`;
         }
-    }
-
-    updateUI() {
-        if (!this.surfData) return;
-
-        const surfDataEl = document.getElementById('surfData');
-        surfDataEl.style.display = 'block';
-
-        this.updateElement('location', this.surfData.location);
-        this.updateElement('timestamp', this.formatTimestamp(this.surfData.timestamp));
-
-        this.updateRating();
-        this.updateElement('duration', this.surfData.goodSurfDuration);
-
-        this.updateWeatherCard();
-        this.updateTideCard();
-        this.updateDetails();
     }
 
     updateElement(id, content) {
@@ -353,25 +454,22 @@ formatTimeFromMinutes(minutes) {
     updateWeatherCard() {
         if (!this.surfData.weather) return;
 
-        // const weatherCard = document.getElementById('weatherCard');
         const weatherIcon = document.getElementById('weatherIcon');
-        // const weatherDescription = document.getElementById('weatherDescription');
         const airTemp = document.getElementById('airTemp');
         const waterTemp = document.getElementById('waterTemp');
-
-        // weatherCard.style.display = 'block';
 
         const icon = this.getWeatherIcon(this.surfData.weather.weather_code);
         weatherIcon.textContent = icon;
 
-        // weatherDescription.textContent = this.surfData.weather.weather_description;
-
-        airTemp.textContent = Math.round(this.surfData.weather.air_temperature_f);
-        waterTemp.textContent = Math.round(this.surfData.weather.water_temperature_f);
+        // Handle dash placeholders for temperatures
+        const airTempText = this.surfData.weather.air_temperature_f === '-' ? '-' : Math.round(this.surfData.weather.air_temperature_f);
+        const waterTempText = this.surfData.weather.water_temperature_f === '-' ? '-' : Math.round(this.surfData.weather.water_temperature_f);
+        
+        airTemp.textContent = airTempText;
+        waterTemp.textContent = waterTempText;
     }
 
     updateTideCard() {
-        // Only show tide card if we have detailed tide data
         if (!this.surfData.tides) return;
 
         const tideCard = document.getElementById('tideCard');
@@ -384,27 +482,44 @@ formatTimeFromMinutes(minutes) {
 
         tideCard.style.display = 'block';
 
-        const currentHeight = parseFloat(this.surfData.tides.current_height_ft);
-        const displayHeight = !isNaN(currentHeight) ? currentHeight.toFixed(1) : '--';
+        // Handle dash placeholders for tide height
+        if (this.surfData.tides.current_height_ft === '-') {
+            tideHeight.textContent = '- ft';
+        } else {
+            const currentHeight = parseFloat(this.surfData.tides.current_height_ft);
+            const displayHeight = !isNaN(currentHeight) ? currentHeight.toFixed(1) : '--';
+            tideHeight.textContent = `${displayHeight} ft`;
+        }
         
-        tideHeight.textContent = `${displayHeight} ft`;
         tideStateFull.textContent = this.surfData.tides.state || 'Unknown';
 
+        // Handle next high tide
         if (this.surfData.tides.next_high) {
             nextHighTime.textContent = this.surfData.tides.next_high.time || '--';
-            const highHeight = parseFloat(this.surfData.tides.next_high.height);
-            const displayHighHeight = !isNaN(highHeight) ? highHeight.toFixed(1) : '--';
-            nextHighHeight.textContent = `${displayHighHeight} ft`;
+            
+            if (this.surfData.tides.next_high.height === '-') {
+                nextHighHeight.textContent = '- ft';
+            } else {
+                const highHeight = parseFloat(this.surfData.tides.next_high.height);
+                const displayHighHeight = !isNaN(highHeight) ? highHeight.toFixed(1) : '--';
+                nextHighHeight.textContent = `${displayHighHeight} ft`;
+            }
         } else {
             nextHighTime.textContent = '--';
             nextHighHeight.textContent = '-- ft';
         }
 
+        // Handle next low tide
         if (this.surfData.tides.next_low) {
             nextLowTime.textContent = this.surfData.tides.next_low.time || '--';
-            const lowHeight = parseFloat(this.surfData.tides.next_low.height);
-            const displayLowHeight = !isNaN(lowHeight) ? lowHeight.toFixed(1) : '--';
-            nextLowHeight.textContent = `${displayLowHeight} ft`;
+            
+            if (this.surfData.tides.next_low.height === '-') {
+                nextLowHeight.textContent = '- ft';
+            } else {
+                const lowHeight = parseFloat(this.surfData.tides.next_low.height);
+                const displayLowHeight = !isNaN(lowHeight) ? lowHeight.toFixed(1) : '--';
+                nextLowHeight.textContent = `${displayLowHeight} ft`;
+            }
         } else {
             nextLowTime.textContent = '--';
             nextLowHeight.textContent = '-- ft';
@@ -429,52 +544,63 @@ formatTimeFromMinutes(minutes) {
         return directions[index];
     }
 
-createDirectionArrow(degrees) {
-    const arrow = document.createElement('span');
-    arrow.textContent = '→';
-    arrow.style.fontFamily = 'Bricolage Grotesque, sans-serif';
-    arrow.style.fontSize = '1em';
-    arrow.style.display = 'inline-block';
-    arrow.style.marginLeft = '6px';
-    arrow.style.color = '#000';
-    arrow.style.transition = 'all 0.3s ease';
-    arrow.style.fontWeight = '600';
-    
-    // REVERTED: Back to original rotation
-    const rotationDegrees = degrees + 90;
-    arrow.style.transform = `rotate(${rotationDegrees}deg)`;
-    arrow.style.transformOrigin = 'center';
-    
-    return arrow;
-}
-
-updateDetails() {
-    const details = this.surfData.details;
-    
-    this.updateElement('waveHeight', `${details.wave_height_ft} ft`);
-    
-    const wavePeriodEl = document.getElementById('wavePeriod');
-    if (wavePeriodEl) {
-        wavePeriodEl.innerHTML = `${details.wave_period_sec} sec`;
-        const swellArrow = this.createDirectionArrow(details.swell_direction_deg);
-        const sourceDirection = (details.swell_direction_deg + 180) % 360;
-        swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
-        wavePeriodEl.appendChild(swellArrow);
-    }
-    
-    const windSpeedEl = document.getElementById('windSpeed');
-    if (windSpeedEl) {
-        const windSpeedKts = Math.round(details.wind_speed_kts);
-        windSpeedEl.innerHTML = `${windSpeedKts} kts`;
-        const windArrow = this.createDirectionArrow(details.wind_direction_deg);
+    createDirectionArrow(degrees) {
+        const arrow = document.createElement('span');
+        arrow.textContent = '→';
+        arrow.style.fontFamily = 'Bricolage Grotesque, sans-serif';
+        arrow.style.fontSize = '1em';
+        arrow.style.display = 'inline-block';
+        arrow.style.marginLeft = '6px';
+        arrow.style.color = '#000';
+        arrow.style.transition = 'all 0.3s ease';
+        arrow.style.fontWeight = '600';
         
-        // REVERTED: Back to original wind direction logic
-        const sourceDirection = (details.wind_direction_deg + 180) % 360;
-        windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
-        windSpeedEl.appendChild(windArrow);
+        const rotationDegrees = degrees + 90;
+        arrow.style.transform = `rotate(${rotationDegrees}deg)`;
+        arrow.style.transformOrigin = 'center';
+        
+        return arrow;
     }
-    
-}
+
+    updateDetails() {
+        const details = this.surfData.details;
+        
+        // Handle dash placeholders for wave height
+        const waveHeightText = details.wave_height_ft === '-' ? '-' : `${details.wave_height_ft} ft`;
+        this.updateElement('waveHeight', waveHeightText);
+        
+        const wavePeriodEl = document.getElementById('wavePeriod');
+        if (wavePeriodEl) {
+            const periodText = details.wave_period_sec === '-' ? '-' : `${details.wave_period_sec} sec`;
+            wavePeriodEl.innerHTML = periodText;
+            
+            // Only add arrow if we have real data (not dashes)
+            if (details.wave_period_sec !== '-' && details.swell_direction_deg) {
+                const swellArrow = this.createDirectionArrow(details.swell_direction_deg);
+                const sourceDirection = (details.swell_direction_deg + 180) % 360;
+                swellArrow.title = `Swell from ${this.getCompassDirection(sourceDirection)} (${details.swell_direction_deg}° swell direction)`;
+                wavePeriodEl.appendChild(swellArrow);
+            }
+        }
+        
+        const windSpeedEl = document.getElementById('windSpeed');
+        if (windSpeedEl) {
+            if (details.wind_speed_kts === '-') {
+                windSpeedEl.innerHTML = '-';
+            } else {
+                const windSpeedKts = Math.round(details.wind_speed_kts);
+                windSpeedEl.innerHTML = `${windSpeedKts} kts`;
+                
+                // Only add arrow if we have real data
+                if (details.wind_direction_deg) {
+                    const windArrow = this.createDirectionArrow(details.wind_direction_deg);
+                    const sourceDirection = (details.wind_direction_deg + 180) % 360;
+                    windArrow.title = `Wind from ${this.getCompassDirection(sourceDirection)} (${details.wind_direction_deg}° wind direction)`;
+                    windSpeedEl.appendChild(windArrow);
+                }
+            }
+        }
+    }
 
     formatTimestamp(timestamp) {
         const date = new Date(timestamp);
@@ -489,8 +615,6 @@ updateDetails() {
     }
 
     startWaveAnimation() {
-        if (!this.surfData) return;
-
         const canvas = document.getElementById('waveCanvas');
         if (!canvas) return;
 
@@ -498,10 +622,27 @@ updateDetails() {
             this.waveAnimation.destroy();
         }
 
-        this.waveAnimation = new WaveAnimation(canvas, this.surfData.details);
+        // Use current surf data or fallback to minimal data for wave animation
+        const waveData = this.surfData?.details || {
+            wave_height_ft: 2.0,
+            wave_period_sec: 8.0,
+            swell_direction_deg: 90,
+            wind_speed_kts: 10.0
+        };
+
+        // Don't break wave animation with dashes - use defaults if data is placeholder
+        const safeWaveData = {
+            wave_height_ft: waveData.wave_height_ft === '-' ? 2.0 : waveData.wave_height_ft,
+            wave_period_sec: waveData.wave_period_sec === '-' ? 8.0 : waveData.wave_period_sec,
+            swell_direction_deg: waveData.swell_direction_deg || 90,
+            wind_speed_kts: waveData.wind_speed_kts === '-' ? 10.0 : waveData.wind_speed_kts
+        };
+
+        this.waveAnimation = new WaveAnimation(canvas, safeWaveData);
         this.waveAnimation.start();
     }
 
+    // Notification methods remain the same...
     async toggleNotifications() {
         if (!('Notification' in window)) {
             this.showMessage('This browser does not support notifications');
@@ -673,7 +814,7 @@ updateDetails() {
     }
 }
 
-// Make app instance globally accessible for the tide chart
+// Make app instance globally accessible
 window.app = null;
 
 // Initialize app when DOM is loaded
@@ -681,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = new SurfApp();
 });
 
-// Add CSS for toast animation
+// Add CSS for shimmer animation and transitions
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -693,6 +834,16 @@ style.textContent = `
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+    }
+    
+    /* Smooth transitions for data updates */
+    .rating, .detail-value, .temp-value, .tide-height {
+        transition: all 0.3s ease;
+    }
+    
+    /* Loading state for placeholder cards */
+    .status-card, .detail-item, .weather-card, .tide-card {
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
 `;
 document.head.appendChild(style);
