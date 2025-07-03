@@ -88,24 +88,24 @@ class WaveAnimation {
                 frequency: this.frequency,
                 speed: this.speed,
                 phase: 0,
-                color: 'white',//'rgb(100, 249, 229, 0.4)',
-                strokeColor: 'black'
+                color: 'white',
+                strokeColor: 'rgba(0, 0, 0, 0.2)'
             },
             {
                 amplitude: this.amplitude * 0.7,
                 frequency: this.frequency * 1.3,
                 speed: this.speed * 1.5,
                 phase: Math.PI / 3,
-                color: 'white',//'rgba(59, 130, 246, 0.4)',
-                strokeColor: 'black'//rgba(147, 197, 253, 0.6)'
+                color: 'white',
+                strokeColor: 'rgba(0, 0, 0, 0.2)'
             },
             {
                 amplitude: this.amplitude * 0.4,
                 frequency: this.frequency * 2.1,
                 speed: this.speed * 2.2,
                 phase: Math.PI / 2,
-                color: 'white',//'rgb(100, 249, 229, 0.4)',
-                strokeColor: 'black'//'rgb(100, 249, 229, 0.6)'
+                color: 'white',
+                strokeColor: 'rgba(0, 0, 0, 0.2)'
             }
         ];
     }
@@ -134,33 +134,13 @@ class WaveAnimation {
 
         this.ctx.clearRect(0, 0, this.width, this.height);
         
-        // Draw background gradient (full screen)
-        // this.drawBackground();
-        
         // Draw wave layers (back to front)
         for (let i = this.waves.length - 1; i >= 0; i--) {
             this.drawWave(this.waves[i]);
         }
-        
-        // Add foam/whitecaps for higher waves
-        if (this.waveData.wave_height_ft > 3) {
-            this.drawFoam();
-        }
 
         this.time += 1;
         this.animationId = requestAnimationFrame(() => this.animate());
-    }
-
-    drawBackground() {
-        // Create a more subtle gradient that works as background
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, 'rgba(0, 51, 102, 0.1)');
-        gradient.addColorStop(0.4, 'rgba(0, 119, 204, 0.1)');
-        gradient.addColorStop(0.7, 'rgba(59, 130, 246, 0.15)');
-        gradient.addColorStop(1, 'rgba(29, 78, 216, 0.2)');
-        
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
     drawWave(wave) {
@@ -191,8 +171,8 @@ class WaveAnimation {
         // Create wave gradient from wave peak to bottom
         const waveGradient = this.ctx.createLinearGradient(0, this.baseY - wave.amplitude, 0, this.height);
         waveGradient.addColorStop(0, wave.color);
-        waveGradient.addColorStop(0.7, wave.color.replace(/[\d\.]+\)$/g, '0.05)'));
-        waveGradient.addColorStop(1, wave.color.replace(/[\d\.]+\)$/g, '0.01)'));
+        waveGradient.addColorStop(0.7, wave.color.replace(/[\d\.]+\)$/g, '1)'));
+        waveGradient.addColorStop(1, wave.color.replace(/[\d\.]+\)$/g, '1)'));
         
         this.ctx.fillStyle = waveGradient;
         this.ctx.fill();
@@ -208,23 +188,5 @@ class WaveAnimation {
         this.ctx.strokeStyle = wave.strokeColor;
         this.ctx.lineWidth = 1;
         this.ctx.stroke();
-    }
-
-    drawFoam() {
-        const foamParticles = Math.floor(this.width / 50); // Scale particles with screen width
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        
-        for (let i = 0; i < foamParticles; i++) {
-            const x = (this.time * 2 + i * 80) % (this.width + 100) - 50;
-            const y = this.baseY + 
-                this.amplitude * 0.8 * Math.sin(this.frequency * x + this.time * this.speed) +
-                Math.sin(this.time * 0.05 + i) * 8;
-            
-            const size = 2 + Math.sin(this.time * 0.1 + i) * 3;
-            
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, size, 0, Math.PI * 2);
-            this.ctx.fill();
-        }
     }
 }

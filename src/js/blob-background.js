@@ -1,4 +1,4 @@
-// Dynamic Blob Gradient Background System for Surf Lab
+// Enhanced Blob Background with Fixed Z-Index Layering
 class DynamicBlobBackground {
     constructor() {
         this.currentWeatherCode = null;
@@ -192,22 +192,24 @@ class DynamicBlobBackground {
         const existing = document.getElementById('blob-background-container');
         if (existing) existing.remove();
         
-        // Create new container
+        // Create new container with proper positioning
         this.blobContainer = document.createElement('div');
         this.blobContainer.id = 'blob-background-container';
         this.blobContainer.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             pointer-events: none;
-            z-index: -10;
+            z-index: -100;
             overflow: hidden;
+            isolation: isolate;
         `;
         
+        // Insert as the very first child of body to ensure it's behind everything
         document.body.insertBefore(this.blobContainer, document.body.firstChild);
-        console.log('🌊 Blob container created behind everything (z-index: -10)');
+        console.log('🌊 Blob container created behind everything (z-index: -100)');
     }
     
     addStyles() {
@@ -216,6 +218,32 @@ class DynamicBlobBackground {
         const style = document.createElement('style');
         style.id = 'blob-background-styles';
         style.textContent = `
+            /* Root stacking context fix */
+            html {
+                position: relative;
+                z-index: 0;
+            }
+            
+            /* Body positioning for stacking context */
+            body {
+                position: relative;
+                z-index: 1;
+                isolation: isolate;
+            }
+            
+            /* Blob container - always at the bottom */
+            #blob-background-container {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: -100 !important;
+                pointer-events: none !important;
+                overflow: hidden !important;
+                isolation: isolate;
+            }
+            
             /* Blob-specific styles */
             .gradient-blob {
                 position: absolute;
@@ -224,6 +252,7 @@ class DynamicBlobBackground {
                 pointer-events: none;
                 mix-blend-mode: multiply;
                 transition: all 3s ease-in-out;
+                will-change: transform, opacity;
             }
             
             .gradient-blob.animate {
@@ -245,24 +274,37 @@ class DynamicBlobBackground {
                 }
             }
             
-            /* Z-index layering for proper stacking */
-            #blob-background-container {
-                z-index: -10 !important;
-            }
-            
+            /* Wave container positioning */
             .wave-container {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
                 z-index: 1 !important;
-                opacity: 0.3;
+                opacity: 1;
                 mix-blend-mode: overlay;
+                pointer-events: none;
+                isolation: isolate;
             }
             
-            .container, .top-controls {
-                position: relative;
+            /* Main content positioning */
+            .container {
+                position: relative !important;
                 z-index: 10 !important;
+                isolation: isolate;
+            }
+            
+            .top-controls {
+                position: fixed !important;
+                z-index: 20 !important;
+                isolation: isolate;
             }
             
             /* Enhanced glass morphism for blob backgrounds on white */
-            .status-card, .detail-item, .weather-card, .tide-card, .top-controls {
+            .status-card, .detail-item, .weather-card, .tide-card {
+                position: relative;
+                z-index: 1;
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);
                 background: rgba(255, 255, 255, 0.85);
@@ -271,12 +313,23 @@ class DynamicBlobBackground {
                     0 8px 32px rgba(0, 0, 0, 0.1),
                     inset 0 1px 0 rgba(255, 255, 255, 0.8);
                 color: #000000;
+                isolation: isolate;
+            }
+            
+            .top-controls {
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+                background: rgba(255, 255, 255, 0.85);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                isolation: isolate;
             }
             
             /* Text is always dark on white background */
             .location, .rating, .detail-value, .timestamp {
                 color: #000000 !important;
                 text-shadow: none !important;
+                position: relative;
+                z-index: 1;
             }
             
             /* Top controls adjustments for white background */
@@ -284,6 +337,8 @@ class DynamicBlobBackground {
                 background: rgba(255, 255, 255, 0.9);
                 color: #000000;
                 border-color: rgba(0, 0, 0, 0.1);
+                position: relative;
+                z-index: 1;
             }
             
             .top-controls .btn:hover {
@@ -291,14 +346,57 @@ class DynamicBlobBackground {
                 border-color: rgba(0, 0, 0, 0.2);
             }
             
+            /* Force proper stacking order */
+            .detail-visual-bg {
+                z-index: 0 !important;
+            }
+            
+            .detail-label, .detail-value {
+                z-index: 1 !important;
+                position: relative;
+            }
+            
+            /* Ensure all animated elements stay in their containers */
+            .wind-lines-container,
+            .period-visual-container {
+                z-index: 0 !important;
+                position: absolute;
+                overflow: hidden;
+            }
+            
+            /* Tide visual positioning */
+            .tide-visual-container {
+                position: relative;
+                z-index: 0;
+                isolation: isolate;
+            }
+            
+            .tide-markers {
+                z-index: 2 !important;
+                position: absolute;
+            }
+            
             @media (prefers-reduced-motion: reduce) {
                 .gradient-blob.animate {
                     animation: none;
                 }
             }
+            
+            /* Debug helper (remove in production) */
+            .debug-z-index #blob-background-container {
+                border: 2px solid red;
+            }
+            
+            .debug-z-index .wave-container {
+                border: 2px solid blue;
+            }
+            
+            .debug-z-index .container {
+                border: 2px solid green;
+            }
         `;
         document.head.appendChild(style);
-        console.log('🎨 Blob background styles added');
+        console.log('🎨 Fixed blob background styles added');
     }
     
     generateBlobs(gradients) {
@@ -371,6 +469,7 @@ class DynamicBlobBackground {
             mix-blend-mode: multiply;
             animation-delay: ${delay}s;
             transition: all 3s ease-in-out;
+            z-index: 1;
         `;
         
         return {
@@ -503,6 +602,17 @@ class DynamicBlobBackground {
         }
     }
     
+    // Debug function to add visual borders
+    enableDebugMode() {
+        document.body.classList.add('debug-z-index');
+        console.log('🐛 Debug mode enabled - check element borders');
+    }
+    
+    disableDebugMode() {
+        document.body.classList.remove('debug-z-index');
+        console.log('🐛 Debug mode disabled');
+    }
+    
     // Resize handler
     handleResize() {
         if (this.currentPalette) {
@@ -518,7 +628,8 @@ class DynamicBlobBackground {
             key: this.currentPalette,
             time: new Date().toLocaleTimeString(),
             blobCount: 1, // Always 1 now
-            isInitialized: this.isInitialized
+            isInitialized: this.isInitialized,
+            containerZIndex: this.blobContainer?.style.zIndex || 'unknown'
         };
     }
     
@@ -537,14 +648,14 @@ class DynamicBlobBackground {
         
         // Reset body
         document.body.style.background = '';
-        document.body.classList.remove('light-gradient', 'dark-gradient');
+        document.body.classList.remove('light-gradient', 'dark-gradient', 'debug-z-index');
         
         this.isInitialized = false;
         console.log('🌊 Blob background system destroyed');
     }
 }
 
-// Integration functions (same as before but for blobs)
+// Integration functions
 function initializeBlobBackground() {
     console.log('🚀 Starting blob background initialization...');
     
@@ -623,7 +734,7 @@ if (document.readyState === 'loading') {
     initializeBlobBackground();
 }
 
-// Debug functions
+// Enhanced debug functions
 window.blobBackgroundDebug = {
     testPalette: (name) => {
         if (window.blobBackground) {
@@ -665,6 +776,32 @@ window.blobBackgroundDebug = {
             window.blobBackground.generateBlobs(gradients);
         }
     },
+    enableDebug: () => {
+        if (window.blobBackground) {
+            window.blobBackground.enableDebugMode();
+        }
+    },
+    disableDebug: () => {
+        if (window.blobBackground) {
+            window.blobBackground.disableDebugMode();
+        }
+    },
+    checkZIndex: () => {
+        const container = document.getElementById('blob-background-container');
+        const wave = document.querySelector('.wave-container');
+        const content = document.querySelector('.container');
+        
+        console.log('🔍 Z-Index Check:');
+        console.log('Blob container:', container?.style.zIndex, getComputedStyle(container).zIndex);
+        console.log('Wave container:', wave?.style.zIndex, getComputedStyle(wave).zIndex);
+        console.log('Content container:', content?.style.zIndex, getComputedStyle(content).zIndex);
+        
+        return {
+            blob: { set: container?.style.zIndex, computed: getComputedStyle(container).zIndex },
+            wave: { set: wave?.style.zIndex, computed: getComputedStyle(wave).zIndex },
+            content: { set: content?.style.zIndex, computed: getComputedStyle(content).zIndex }
+        };
+    },
     reinitialize: () => {
         if (window.blobBackground) {
             window.blobBackground.destroy();
@@ -674,12 +811,12 @@ window.blobBackgroundDebug = {
     }
 };
 
-console.log('🌊 Single large blob background system loaded. Try these commands:');
+console.log('🌊 Fixed blob background system loaded. Try these commands:');
 console.log('window.blobBackground.setManualPalette("sunrise")');
 console.log('window.blobBackground.getCurrentPalette()');
-console.log('window.blobBackgroundDebug.listPalettes()');
+console.log('window.blobBackgroundDebug.enableDebug() // shows borders');
+console.log('window.blobBackgroundDebug.checkZIndex() // z-index diagnostic');
 console.log('window.blobBackgroundDebug.testWeather(95) // thunderstorm');
-console.log('window.blobBackgroundDebug.regenerateBlobs() // new random position');
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
