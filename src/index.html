@@ -13,40 +13,120 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SURF LAB">
     
-    <!-- FIXED: Use working Google Fonts URLs with proper preconnect -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- WORKING SOLUTION: Use Inter from the official source (more reliable than Google Fonts) -->
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     
-    <!-- CORRECTED: Use Bricolage Grotesque (the font you actually want) -->
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
-    <!-- Keep Noto Emoji for consistent emoji rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- CRITICAL: Immediate font fallback CSS to prevent FOUT -->
+    <!-- Critical inline CSS with working fonts -->
     <style>
-        /* Root font variables with working fonts */
+        /* Root font variables using working Inter font */
         :root {
-            --font-primary: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            --font-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', Arial, sans-serif;
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', Arial, sans-serif;
         }
         
-        /* Base font loading - immediate render */
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: var(--font-primary);
-            font-synthesis: none;
+            font-feature-settings: 'liga' 1, 'calt' 1; /* Inter recommended settings */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
-            font-display: swap;
+            background: white;
+            color: #000;
+            min-height: 100vh;
+            transition: background 3s ease-in-out;
+            overflow-x: hidden;
         }
         
-        /* Emoji font handling - force consistency */
+        /* Support for Inter Variable font when available */
+        @supports (font-variation-settings: normal) {
+            :root {
+                font-family: 'InterVariable', sans-serif;
+            }
+        }
+        
+        /* Typography hierarchy */
+        .title { 
+            font-family: var(--font-primary);
+            font-weight: 300; 
+            font-size: 1.2rem;
+        }
+        
+        .location { 
+            font-family: var(--font-primary);
+            font-weight: 600; 
+            font-size: 1.5rem;
+        }
+        
+        .rating { 
+            font-family: var(--font-primary);
+            font-weight: 700; 
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .detail-label { 
+            font-family: var(--font-primary);
+            font-weight: 600; 
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        
+        .detail-value { 
+            font-family: var(--font-primary);
+            font-weight: 600; 
+            font-size: 1.5rem;
+        }
+        
+        .temp-value { 
+            font-family: var(--font-primary);
+            font-weight: 600; 
+            font-size: 1.5rem;
+        }
+        
+        .tide-title { 
+            font-family: var(--font-primary);
+            font-weight: 600; 
+            font-size: 1.125rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .duration {
+            font-family: var(--font-primary);
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .timestamp {
+            font-family: var(--font-primary);
+            font-weight: 400;
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+        
+        /* System emoji fonts for maximum compatibility */
         .bell-icon,
-        .weather-icon,
-        .checkbox-icon {
+        .weather-icon {
             font-family: var(--font-emoji);
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+            font-weight: 400;
             font-variant-emoji: presentation;
-            font-display: swap;
+            -webkit-font-feature-settings: normal;
+            font-feature-settings: normal;
             width: 24px;
             height: 24px;
             display: inline-flex;
@@ -55,29 +135,19 @@
             text-align: center;
         }
         
-        /* Loading state prevention */
-        .title,
-        .location,
-        .rating,
-        .detail-label,
-        .detail-value,
-        .temp-label,
-        .temp-value,
-        .tide-title {
-            font-family: var(--font-primary);
-            font-display: swap;
+        .weather-icon {
+            font-size: 24px;
+            margin-right: 16px;
         }
         
-        /* Font weight mapping for Bricolage Grotesque */
-        .title { font-weight: 300; font-variation-settings: "opsz" 20; }
-        .location { font-weight: 600; font-variation-settings: "opsz" 24; }
-        .rating { font-weight: 700; font-variation-settings: "opsz" 32; }
-        .detail-label { font-weight: 600; font-variation-settings: "opsz" 12; }
-        .detail-value { font-weight: 600; font-variation-settings: "opsz" 24; }
-        .temp-value { font-weight: 600; font-variation-settings: "opsz" 28; }
-        .tide-title { font-weight: 600; font-variation-settings: "opsz" 18; }
+        .bell-icon {
+            font-size: 24px;
+            font-weight: 700;
+            color: #000;
+            transition: all 0.3s ease;
+        }
         
-        /* Loading shimmer for better UX */
+        /* Loading states */
         .loading-shimmer {
             position: relative;
             overflow: hidden;
@@ -110,27 +180,38 @@
                 animation: none;
             }
         }
+        
+        /* Font loading states */
+        .fonts-loading body {
+            visibility: hidden;
+        }
+        
+        .fonts-loaded body,
+        .fonts-fallback body {
+            visibility: visible;
+        }
     </style>
     
-    <!-- Enhanced font loading with error handling -->
+    <!-- Enhanced font loading script -->
     <script>
         (function() {
             document.documentElement.className = 'fonts-loading';
             
             if ('fonts' in document) {
-                Promise.race([
-                    Promise.all([
-                        document.fonts.load('400 16px "Bricolage Grotesque"').catch(() => null),
-                        document.fonts.load('700 24px "Bricolage Grotesque"').catch(() => null),
-                        document.fonts.load('400 24px "Noto Emoji"').catch(() => null)
-                    ]),
-                    new Promise(resolve => setTimeout(resolve, 3000))
-                ]).then(() => {
-                    document.documentElement.className = 'fonts-loaded';
-                    console.log('✅ Fonts loaded successfully');
-                }).catch(() => {
+                const timeout = setTimeout(() => {
                     document.documentElement.className = 'fonts-fallback';
-                    console.log('⚠️ Using fallback fonts');
+                    console.log('⚠️ Font loading timeout - using system fonts');
+                }, 3000);
+                
+                // Check for Inter font availability
+                document.fonts.ready.then(() => {
+                    clearTimeout(timeout);
+                    document.documentElement.className = 'fonts-loaded';
+                    console.log('✅ Inter font loaded successfully from rsms.me');
+                }).catch(() => {
+                    clearTimeout(timeout);
+                    document.documentElement.className = 'fonts-fallback';
+                    console.log('⚠️ Font loading failed - using system fonts');
                 });
             } else {
                 setTimeout(() => {
@@ -144,13 +225,13 @@
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230077cc'/><path d='M0,20 Q8,16 16,20 T32,20 L32,32 L0,32 Z' fill='white'/></svg>">
     <link rel="manifest" href="manifest.json">
     
-    <!-- Styles -->
+    <!-- External Styles -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
-    <!-- Top Controls Bar -->
+    <!-- Your existing HTML structure remains the same -->
     <div class="top-controls">
         <h1 class="title">SURF LAB</h1>
         <div class="controls">
@@ -160,7 +241,6 @@
         </div>
     </div>
 
-    <!-- Full Screen Wave Animation -->
     <div class="wave-container">
         <canvas id="waveCanvas"></canvas>
     </div>
@@ -188,50 +268,25 @@
                 <div class="duration" id="duration">-</div>
             </div>
 
-            <!-- Weather Conditions Card -->
-            <!-- <div class="weather-card" id="weatherCard" style="display: none;">
-                <div class="weather-icon" id="weatherIcon">☀️</div>
-                <div class="weather-description" id="weatherDescription">Clear sky</div>
-                
-                <div class="temperature-grid">
-                    <div class="temp-item">
-                        <div class="temp-label">Air</div>
-                        <div class="temp-value">
-                            <span id="airTemp">--</span>
-                            <span class="temp-unit">°F</span>
-                        </div>
-                    </div>
-                    <div class="temp-item">
-                        <div class="temp-label">Water</div>
-                        <div class="temp-value">
-                            <span id="waterTemp">--</span>
-                            <span class="temp-unit">°F</span>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
-
             <div class="details-grid">
-                <!-- Wave Height with solid color background -->
                 <div class="detail-item" id="waveHeightCard">
                     <div class="detail-visual-bg" id="waveHeightBg"></div>
                     <div class="detail-label">Wave Height</div>
                     <div class="detail-value" id="waveHeight">-</div>
                 </div>
                 
-                <!-- Period with swell direction and wave animation -->
                 <div class="detail-item" id="periodCard">
                     <div class="period-visual-container" id="periodVisualContainer"></div>
                     <div class="detail-label">Period</div>
                     <div class="detail-value" id="wavePeriod">-</div>
                 </div>
                 
-                <!-- Wind Speed with animated lines matching direction -->
                 <div class="detail-item" id="windSpeedCard">
                     <div class="wind-lines-container" id="windLinesContainer"></div>
                     <div class="detail-label">Wind Speed</div>
                     <div class="detail-value" id="windSpeed">-</div>
                 </div>
+                
                 <div class="detail-item" id="weatherCard">
                     <div class="temperature-grid">
                         <div class="temp-item">
@@ -244,36 +299,35 @@
                 </div>
             </div>
         </div>
-                    <!-- Enhanced Tide Information Card with Static Sine Wave -->
-            <div class="tide-card" id="tideCard" style="display: none;">
-                <div class="tide-header">
-                    <div class="tide-title">Tide</div>
+        
+        <div class="tide-card" id="tideCard" style="display: none;">
+            <div class="tide-header">
+                <div class="tide-title">Tide</div>
+            </div>
+            
+            <div class="tide-current">
+                <div class="tide-height" id="tideHeight">-- ft</div>
+                <div class="tide-state" id="tideStateFull">Current State</div>
+            </div>
+            
+            <div class="tide-visual-container">
+                <canvas class="tide-wave-canvas" id="tideWaveCanvas"></canvas>
+                <div class="tide-markers" id="tideMarkers"></div>
+            </div>
+            
+            <div class="tide-predictions" id="tidePredictions">
+                <div class="tide-prediction">
+                    <div class="tide-prediction-label">Next High</div>
+                    <div class="tide-prediction-time" id="nextHighTime">--</div>
+                    <div class="tide-prediction-height" id="nextHighHeight">-- ft</div>
                 </div>
-                
-                <div class="tide-current">
-                    <div class="tide-height" id="tideHeight">-- ft</div>
-                    <div class="tide-state" id="tideStateFull">Current State</div>
-                </div>
-                
-                <!-- Tide Visual Representation -->
-                <div class="tide-visual-container">
-                    <canvas class="tide-wave-canvas" id="tideWaveCanvas"></canvas>
-                    <div class="tide-markers" id="tideMarkers"></div>
-                </div>
-                
-                <div class="tide-predictions" id="tidePredictions">
-                    <div class="tide-prediction">
-                        <div class="tide-prediction-label">Next High</div>
-                        <div class="tide-prediction-time" id="nextHighTime">--</div>
-                        <div class="tide-prediction-height" id="nextHighHeight">-- ft</div>
-                    </div>
-                    <div class="tide-prediction">
-                        <div class="tide-prediction-label">Next Low</div>
-                        <div class="tide-prediction-time" id="nextLowTime">--</div>
-                        <div class="tide-prediction-height" id="nextLowHeight">-- ft</div>
-                    </div>
+                <div class="tide-prediction">
+                    <div class="tide-prediction-label">Next Low</div>
+                    <div class="tide-prediction-time" id="nextLowTime">--</div>
+                    <div class="tide-prediction-height" id="nextLowHeight">-- ft</div>
                 </div>
             </div>
+        </div>
     </div>
 
     <!-- Scripts -->

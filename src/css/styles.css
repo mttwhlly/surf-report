@@ -1,109 +1,9 @@
 /* Base styles and typography for SURF LAB */
 
-/* FOUT Fix - Add to the top of styles.css */
-
-/* Font loading strategy to prevent FOUT */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300;400;500;600;700&display=swap');
-
-/* Font-face declarations with fallbacks */
-@font-face {
-    font-family: 'Bricolage Grotesque Fallback';
-    src: local('Arial'), local('Helvetica'), local('sans-serif');
-    font-display: fallback;
-    ascent-override: 90%;
-    descent-override: 25%;
-    line-gap-override: 0%;
-    size-adjust: 95%;
-}
-
-@font-face {
-    font-family: 'Noto Emoji Fallback';
-    src: local('Apple Color Emoji'), local('Segoe UI Emoji'), local('Arial');
-    font-display: fallback;
-    unicode-range: U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+2600-26FF;
-}
-
-/* Root font loading with immediate fallback */
+/* Font variables are defined in HTML head - no imports here */
 :root {
-    --font-primary: 'Bricolage Grotesque', 'Bricolage Grotesque Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    --font-emoji: 'Noto Emoji', 'Noto Emoji Fallback', 'Apple Color Emoji', 'Segoe UI Emoji', Arial, sans-serif;
-}
-
-/* Apply fonts with fallback chain */
-body {
-    font-family: var(--font-primary);
-    font-display: swap;
-    /* Prevent invisible text during font load */
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-}
-
-/* Specific emoji font loading */
-.bell-icon,
-.weather-icon,
-.checkbox-icon {
-    font-family: var(--font-emoji);
-    font-display: swap;
-}
-
-/* Loading state styles to minimize layout shift */
-.bell-icon {
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.weather-icon {
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding-top: 6px;
-}
-
-/* Prevent layout shift during font loading */
-.title,
-.location,
-.rating,
-.detail-label,
-.detail-value,
-.temp-label,
-.temp-value,
-.tide-title,
-.notification-text {
-    font-family: var(--font-primary);
-    font-display: swap;
-}
-
-/* Optimize font loading performance */
-.container {
-    font-synthesis: none;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Critical CSS for immediate rendering */
-.notification-bell .bell-icon {
-    /* Ensure consistent sizing even before font loads */
-    min-width: 24px;
-    min-height: 24px;
-    background: transparent;
-    /* Fallback content for extreme edge cases */
-}
-
-.notification-bell .bell-icon:empty::before {
-    content: "🔕"; /* Fallback emoji if font fails to load */
-    display: block;
-}
-
-.notification-bell.enabled .bell-icon:empty::before {
-    content: "🔔"; /* Fallback emoji for enabled state */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', Arial, sans-serif;
 }
 
 * {
@@ -113,8 +13,7 @@ body {
 }
 
 body {
-    font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    /* background: white; */
+    font-family: var(--font-primary);
     color: #000;
     min-height: 100vh;
     transition: background 3s ease-in-out;
@@ -127,22 +26,20 @@ body {
 
 .title {
     font-weight: 300;
-    font-variation-settings: "opsz" 20;
 }
 
-/* Weather icon styling with Noto Emoji (black/monochrome) */
+/* Weather icon styling - system emojis only */
 .weather-icon {
-    font-family: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    font-family: var(--font-emoji);
     font-style: normal;
     font-variant: normal;
     text-rendering: auto;
     line-height: 1;
     font-size: 24px;
-    margin-left: 16px;;
-    color: inherit; /* Use text color instead of emoji color */
+    margin-right: 16px;
+    color: inherit;
     font-weight: 400;
-    /* Disable emoji color rendering to get black icons */
-    font-variant-emoji: text;
+    font-variant-emoji: presentation;
     -webkit-font-feature-settings: normal;
     font-feature-settings: normal;
 }
@@ -196,7 +93,6 @@ body.dark-gradient .detail-value {
     color: #ffffff;
 }
 
-/* Weather icons adapt to theme */
 body.dark-gradient .weather-icon {
     color: #ffffff;
 }
@@ -224,6 +120,12 @@ body.light-gradient .weather-icon {
 .wave-container {
     opacity: 0.6;
     mix-blend-mode: overlay;
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+#blob-background-container {
+    transform: translateZ(-1px);
 }
 
 /* Text contrast adjustments */
@@ -257,31 +159,41 @@ body.light-gradient .top-controls .btn {
     border-color: rgba(0, 0, 0, 0.2);
 }
 
-.wave-container {
-    transform: translateZ(0); /* Force new stacking context */
-    will-change: transform;
-}
-
-#blob-background-container {
-    transform: translateZ(-1px); /* Push deeper */
-}
-
-/* Enhanced emoji support for cross-platform consistency */
-.weather-icon, 
-.notification-checkbox .checkbox-icon {
-    font-family: 'Noto Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-variant-emoji: text; /* Force black/monochrome rendering */
+/* Bell icon specific styles */
+.bell-icon {
+    font-family: var(--font-emoji);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #000;
+    transition: all 0.3s ease;
+    font-variant-emoji: presentation;
     -webkit-font-feature-settings: normal;
     font-feature-settings: normal;
+    position: relative;
 }
 
-/* Ensure weather icons maintain consistent size and positioning */
-.weather-icon {
-    display: inline-block;
-    vertical-align: middle;
-    width: 1em;
-    height: 1em;
-    line-height: 1;
+/* Theme-specific adjustments for bell */
+body.dark-gradient .bell-icon {
+    color: #ffffff;
+}
+
+body.dark-gradient .notification-bell.enabled .bell-icon {
+    color: #10b981;
+}
+
+body.light-gradient .bell-icon {
+    color: #000000;
+}
+
+body.light-gradient .notification-bell.enabled .bell-icon {
+    color: #047857;
 }
 
 /* Responsive Design */
@@ -382,121 +294,6 @@ body.light-gradient .top-controls .btn {
     }
 }
 
-.bell-icon,
-.weather-icon {
-    font-family: 'Noto Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-variant-emoji: text !important;
-    -webkit-font-feature-settings: "COLR" 0, "CBDT" 0, "SBIX" 0, "svg " 0 !important;
-    font-feature-settings: "COLR" 0, "CBDT" 0, "SBIX" 0, "svg " 0 !important;
-    color: inherit !important;
-    
-    /* Additional fallbacks for forcing monochrome */
-    -webkit-text-fill-color: currentColor !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-    
-    /* Disable color emoji rendering */
-    font-variation-settings: normal !important;
-    text-rendering: geometricPrecision !important;
-}
-
-/* Bell icon specific styles */
-.bell-icon {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1;
-    transition: all 0.3s ease;
-    color: #000;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    
-    /* Force black emoji */
-    filter: contrast(1.5) brightness(0.5) saturate(0);
-}
-
-/* Weather icon specific styles */
-.weather-icon {
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 1;
-    color: inherit;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin-right: 16px;
-    
-    /* Force monochrome weather icons */
-    filter: contrast(1.3) brightness(0.7) saturate(0);
-}
-
-/* Theme-specific adjustments for bell */
-body.dark-gradient .bell-icon {
-    color: #ffffff;
-    filter: contrast(1.3) brightness(1.2) saturate(0);
-}
-
-body.dark-gradient .notification-bell.enabled .bell-icon {
-    color: #10b981;
-    filter: contrast(1.3) brightness(1.2) saturate(0.8);
-}
-
-body.light-gradient .bell-icon {
-    color: #000000;
-    filter: contrast(1.5) brightness(0.4) saturate(0);
-}
-
-body.light-gradient .notification-bell.enabled .bell-icon {
-    color: #047857;
-    filter: contrast(1.5) brightness(0.4) saturate(0.8);
-}
-
-/* Theme-specific adjustments for weather icons */
-body.dark-gradient .weather-icon {
-    color: #ffffff;
-    filter: contrast(1.3) brightness(1.1) saturate(0);
-}
-
-body.light-gradient .weather-icon {
-    color: #000000;
-    filter: contrast(1.3) brightness(0.6) saturate(0);
-}
-
-/* Fallback for browsers that don't support emoji fonts */
-@supports not (font-variant-emoji: text) {
-    .bell-icon,
-    .weather-icon {
-        /* Use text-based symbols as fallback */
-        font-family: 'Arial Unicode MS', Arial, sans-serif;
-    }
-    
-    .bell-icon {
-        /* Unicode bell symbols as fallback */
-    }
-    
-    .notification-bell.disabled .bell-icon::before {
-        content: '🔕'; /* Muted bell */
-    }
-    
-    .notification-bell.enabled .bell-icon::before {
-        content: '🔔'; /* Active bell */
-    }
-}
-
-/* Additional CSS reset for emoji */
-.bell-icon *,
-.weather-icon * {
-    color: inherit !important;
-    fill: currentColor !important;
-    stroke: currentColor !important;
-}
-
 /* Ensure proper rendering on all platforms */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
     .bell-icon,
@@ -504,163 +301,4 @@ body.light-gradient .weather-icon {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
-}
-
-.bell-icon {
-    font-family: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #000;
-    transition: all 0.3s ease;
-    
-    /* Prevent double rendering */
-    font-variant-emoji: presentation; /* Use emoji presentation */
-    -webkit-font-feature-settings: normal;
-    font-feature-settings: normal;
-    
-    /* Remove any pseudo-elements that might cause doubles */
-    position: relative;
-}
-
-/* Remove any pseudo-element styling that might cause doubles */
-.bell-icon::before,
-.bell-icon::after {
-    display: none !important;
-    content: none !important;
-}
-
-/* Ensure only the text content shows */
-.bell-icon {
-    overflow: hidden;
-}
-
-/* Safari-specific emoji rendering */
-@supports (-webkit-appearance: none) {
-    .bell-icon {
-        -webkit-font-smoothing: antialiased;
-        font-variant-emoji: presentation;
-        text-rendering: optimizeLegibility;
-    }
-}
-
-/* Fix SVG tide chart for Safari */
-.tide-chart-svg {
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
-    
-    /* Safari SVG rendering fixes */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    
-    /* Ensure proper scaling */
-    max-width: 100%;
-    max-height: 100%;
-    
-    /* Safari-specific SVG fixes */
-    shape-rendering: geometricPrecision;
-    text-rendering: geometricPrecision;
-}
-
-/* Safari SVG path rendering */
-.tide-curve {
-    vector-effect: non-scaling-stroke !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-}
-
-.tide-fill {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-}
-
-/* Tide visual container Safari fixes */
-.tide-visual-container {
-    position: relative;
-    height: 120px;
-    margin: 15px 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    
-    /* Safari rendering improvements */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    isolation: isolate;
-    contain: layout style paint;
-}
-
-/* Ensure SVG container has proper dimensions */
-.tide-visual-container svg {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
-}
-
-/* Force hardware acceleration for smooth rendering */
-.tide-visual-container,
-.tide-chart-svg,
-.bell-icon {
-    will-change: auto;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-}
-
-/* Safari notification bell container */
-.notification-bell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 8px;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 50%;
-    
-    /* Safari-specific fixes */
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-}
-
-/* Safari hover states */
-.notification-bell:hover {
-    transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Theme-specific Safari adjustments */
-body.dark-gradient .bell-icon {
-    color: #ffffff;
-    text-shadow: none;
-}
-
-body.dark-gradient .notification-bell.enabled .bell-icon {
-    color: #10b981;
-}
-
-body.light-gradient .bell-icon {
-    color: #000000;
-    text-shadow: none;
-}
-
-body.light-gradient .notification-bell.enabled .bell-icon {
-    color: #047857;
 }
