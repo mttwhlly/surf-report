@@ -340,10 +340,11 @@ async toggleNotifications() {
 
             const response = await fetch(this.API_URL, {
                 signal: controller.signal,
-                cache: 'no-cache',
+                method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                }
+                },
+                cache: 'reload'
             });
 
             clearTimeout(timeoutId);
