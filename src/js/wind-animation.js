@@ -158,7 +158,7 @@ class WindAnimation extends HTMLElement {
       const opacity = line.opacity * fadeFactor;
 
       this.ctx.strokeStyle = `rgba(0, 0, 0, 1)`;
-      this.ctx.lineWidth = 1.5;
+      this.ctx.lineWidth = 1;
       this.ctx.lineCap = "round";
 
       this.ctx.beginPath();

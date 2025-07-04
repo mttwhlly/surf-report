@@ -5,103 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SURF LAB</title>
     
-    <!-- PWA Meta Tags -->
+    <!-- PWA Meta Tags - FIXED for 2025 compliance -->
     <meta name="description" content="Real-time surf conditions with wave visualization">
     <meta name="theme-color" content="#0077cc">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Surf Conditions">
+    <meta name="apple-mobile-web-app-title" content="SURF LAB">
     
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
-    
-    <!-- Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Google Fonts -->
+    <!-- CRITICAL: Fix font loading with working URLs -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.gstatic.com/s/bricolagegrotesque/v2/nYg-YsWM7FXbbxdFe9F_FheDaUOd_OBinUNvMJN-x-Y.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://fonts.gstatic.com/s/notoemoji/v47/bMrnmSyK7YY-MEu6aWjPDs-ar6uWaGWuob-r0jwvS-FGJCMY.woff2" as="font" type="font/woff2" crossorigin>
-
-    <!-- Critical CSS inline to prevent FOUT -->
+    
+    <!-- FIXED: Use only standard Google Fonts CSS URLs -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Alternative: Self-hosted font fallback -->
     <style>
-        /* Critical font loading */
+        /* CRITICAL: Immediate font fallback to prevent FOUT */
         :root {
-            --font-primary: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            --font-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', Arial, sans-serif;
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', Arial, sans-serif;
         }
         
+        /* Base font loading - immediate render */
         body {
             font-family: var(--font-primary);
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            color: #000;
+            font-synthesis: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            font-display: swap;
+            text-rendering: optimizeLegibility;
         }
         
-        /* Prevent bell icon layout shift */
-        .bell-icon {
+        /* Emoji font handling - force consistency */
+        .bell-icon,
+        .weather-icon,
+        .checkbox-icon {
             font-family: var(--font-emoji);
+            font-variant-emoji: presentation;
+            font-display: swap;
             width: 24px;
             height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
+            text-align: center;
         }
         
-        /* Loading state */
-        .loading-fonts {
-            visibility: hidden;
+        /* Loading state prevention */
+        .title,
+        .location,
+        .rating,
+        .detail-label,
+        .detail-value,
+        .temp-label,
+        .temp-value,
+        .tide-title {
+            font-family: var(--font-primary);
+            font-display: swap;
         }
         
-        .fonts-loaded .loading-fonts {
-            visibility: visible;
+        /* Font weight mapping for Inter */
+        .title { font-weight: 300; }
+        .location { font-weight: 600; }
+        .rating { font-weight: 700; }
+        .detail-label { font-weight: 600; }
+        .detail-value { font-weight: 600; }
+        .temp-value { font-weight: 600; }
+        .tide-title { font-weight: 600; }
+        
+        /* Prevent layout shift during font loading */
+        * {
+            font-display: swap;
         }
     </style>
     
-    <!-- Google Fonts with display=swap -->
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font loading detection -->
+    <script>
+        // Enhanced font loading with better fallbacks
+        (function() {
+            // Set initial class
+            document.documentElement.className = 'fonts-loading';
+            
+            // Check if Font Loading API is supported
+            if ('fonts' in document) {
+                // Try to load fonts
+                Promise.race([
+                    // Try loading fonts with timeout
+                    Promise.all([
+                        document.fonts.load('400 16px Inter'),
+                        document.fonts.load('700 24px Inter'),
+                        document.fonts.load('400 24px "Noto Emoji"')
+                    ]),
+                    // Timeout after 3 seconds
+                    new Promise(resolve => setTimeout(resolve, 3000))
+                ]).then(() => {
+                    document.documentElement.className = 'fonts-loaded';
+                    console.log('✅ Fonts loaded successfully');
+                }).catch(error => {
+                    console.warn('⚠️ Font loading failed, using fallbacks:', error);
+                    document.documentElement.className = 'fonts-fallback';
+                });
+            } else {
+                // Fallback for browsers without Font Loading API
+                setTimeout(() => {
+                    document.documentElement.className = 'fonts-fallback';
+                }, 100);
+            }
+        })();
+    </script>
     
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+    <!-- Icons - Will work once generated -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144.png">
     
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/animations.css">
-    
-    <!-- Font loading detection script -->
-    <script>
-        // Detect when fonts are loaded to prevent FOUT
-        if ('fonts' in document) {
-            Promise.all([
-                document.fonts.load('400 16px Bricolage Grotesque'),
-                document.fonts.load('700 24px Noto Emoji')
-            ]).then(() => {
-                document.documentElement.classList.add('fonts-loaded');
-            }).catch(() => {
-                // Fallback: show content after 3 seconds even if fonts fail
-                setTimeout(() => {
-                    document.documentElement.classList.add('fonts-loaded');
-                }, 3000);
-            });
-        } else {
-            // Fallback for browsers that don't support font loading API
-            document.documentElement.classList.add('fonts-loaded');
-        }
-    </script>
     
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">

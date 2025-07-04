@@ -74,7 +74,7 @@ class WaveAnimation {
         this.wavePeriodSec = wavePeriod;
         
         // Calculate reference lines and period indicators
-        this.baseY = this.height * 0.6; // Position waves in lower 40% of screen
+        this.baseY = this.height * 0.95; // Position waves in lower 40% of screen
         this.maxWaveY = this.baseY - this.amplitude;
         this.minWaveY = this.baseY + this.amplitude;
         

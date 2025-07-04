@@ -64,6 +64,7 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
+    padding-top: 6px;
 }
 
 /* Prevent layout shift during font loading */

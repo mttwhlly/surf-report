@@ -307,7 +307,7 @@ class DynamicBlobBackground {
                 z-index: 1;
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);
-                background: rgba(255, 255, 255, 0.85);
+                background: rgba(255, 255, 255, 0.6);
                 border: none;
                 box-shadow: 
                     0 8px 32px rgba(0, 0, 0, 0.1),
@@ -421,7 +421,7 @@ class DynamicBlobBackground {
         blob.className = 'gradient-blob animate';
         
         // Large size between 600px and 900px
-        const size = 600 + Math.random() * 300;
+        const size = 1200 + Math.random() * 300;
         
         // Center horizontally with slight random offset (±15% of screen width)
         const centerX = window.innerWidth / 2;
