@@ -1,6 +1,6 @@
 // Updated Service Worker - Fixed for missing icons and improved error handling
-const CACHE_NAME = 'surf-conditions-v2.0.1';
-const DYNAMIC_CACHE = 'surf-dynamic-v2.0.1';
+const CACHE_NAME = 'surf-conditions-v2.0.2';
+const DYNAMIC_CACHE = 'surf-dynamic-v2.0.2';
 
 // Only cache files that actually exist - removed problematic icon references
 const STATIC_ASSETS = [
