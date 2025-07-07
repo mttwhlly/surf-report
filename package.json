@@ -1,0 +1,57 @@
+{
+  "name": "surf-lab",
+  "version": "2.0.0",
+  "description": "SURF LAB - Real-time surf conditions PWA with Tailwind CSS",
+  "main": "src/index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/css/input.css -o ./src/css/styles.css --watch & caddy run --config src/Caddyfile",
+    "build": "tailwindcss -i ./src/css/input.css -o ./src/css/styles.css --minify",
+    "build:css": "tailwindcss -i ./src/css/input.css -o ./src/css/styles.css --minify",
+    "watch": "tailwindcss -i ./src/css/input.css -o ./src/css/styles.css --watch",
+    "serve": "caddy run --config src/Caddyfile",
+    "preview": "python -m http.server 8000 --directory src",
+    "icons": "node src/js/icons/generate-icons.js",
+    "favicon": "node src/js/icons/generate-favicons.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mttwhlly/surf-lab.git"
+  },
+  "keywords": [
+    "surf",
+    "weather",
+    "pwa",
+    "tailwind",
+    "progressive-web-app",
+    "surfing",
+    "conditions"
+  ],
+  "author": "Matt Whalley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mttwhlly/surf-lab/issues"
+  },
+  "homepage": "https://github.com/mttwhlly/surf-lab#readme",
+  "devDependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "autoprefixer": "^10.4.21",
+    "canvas": "^2.11.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
+  },
+  "dependencies": {
+    "inter-ui": "^4.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
