@@ -354,14 +354,14 @@ body.light-gradient .notification-bell:focus {
     font-size: 24px;
 }
 
-.tide-title {
+/* .tide-title {
     font-size: 12px;
     font-weight: 600;
     font-family: 'Bricolage Grotesque', sans-serif;
     font-variation-settings: "opsz" 18;
     text-transform: uppercase;
     letter-spacing: 1px;
-}
+} */
 
 .tide-visual-container {
     position: relative;
@@ -500,7 +500,7 @@ body.light-gradient .notification-bell:focus {
     pointer-events: none;
 }
 
-.detail-label {
+.detail-label, .tide-title {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;

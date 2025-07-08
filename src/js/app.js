@@ -434,7 +434,7 @@ updateTideVisualization() {
     }
 
     // Use the corrected tide chart class
-    this.tideWaveVisualizer = new CorrectedTideChart(container, tideDataForChart);
+    this.tideWaveVisualizer = new SmoothTideChart(container, tideDataForChart);
 }
 
     getErrorMessage(error) {

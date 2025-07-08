@@ -1,4 +1,4 @@
-class CorrectedTideChart {
+class SmoothTideChart {
     constructor(container, tideData) {
         this.container = container;
         this.tideData = tideData || {};
@@ -6,7 +6,10 @@ class CorrectedTideChart {
         this.width = 360;
         this.height = 120;
         
-        console.log('🌊 CorrectedTideChart initialized - ACTUALLY FIXED');
+        // Safari detection
+        this.isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        console.log('🌊 SmoothTideChart initialized');
         console.log('📊 Received tideData:', JSON.stringify(this.tideData, null, 2));
         this.init();
     }
@@ -20,13 +23,24 @@ class CorrectedTideChart {
         // Remove existing content
         this.container.innerHTML = '';
         
-        // Create SVG element - FIXED: Use 24-hour coordinate system
+        // Create SVG element
         this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         this.svg.setAttribute('width', '100%');
         this.svg.setAttribute('height', '100%');
-        this.svg.setAttribute('viewBox', `0 0 1440 ${this.height * 9}`); // 1440 = 24 hours * 60 minutes
+        this.svg.setAttribute('viewBox', `0 0 1440 ${this.height * 9}`);
         this.svg.setAttribute('class', 'tide-chart-svg');
         this.svg.setAttribute('preserveAspectRatio', 'none');
+        
+        if (this.isSafari) {
+            this.svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            this.svg.setAttribute('version', '1.1');
+            this.svg.style.display = 'block';
+            this.svg.style.width = '100%';
+            this.svg.style.height = '100%';
+            this.svg.style.position = 'absolute';
+            this.svg.style.top = '0';
+            this.svg.style.left = '0';
+        }
         
         // Add styles
         const style = document.createElement('style');
@@ -41,7 +55,7 @@ class CorrectedTideChart {
             .tide-curve {
                 fill: none;
                 stroke: rgba(0, 0, 0, 1);
-                stroke-width: 2;
+                stroke-width: 1;
                 stroke-linecap: round;
                 vector-effect: non-scaling-stroke;
             }
@@ -50,20 +64,20 @@ class CorrectedTideChart {
                 stroke: none;
             }
             .current-time-line {
-                stroke: #dc2626;
-                stroke-width: 3;
-                stroke-dasharray: 8,8;
+                stroke: #000000;
+                stroke-width: 1;
+                stroke-dasharray: 12,8;
                 vector-effect: non-scaling-stroke;
             }
             .tide-marker {
                 stroke: rgba(255, 255, 255, 0.9);
-                stroke-width: 2;
+                stroke-width: 1;
                 cursor: pointer;
                 transition: all 0.2s ease;
                 vector-effect: non-scaling-stroke;
             }
-            .high-tide { fill: #10b981; r: 8; }
-            .low-tide { fill: #f59e0b; r: 8; }
+            .high-tide { fill: #10b981; r: 10; }
+            .low-tide { fill: #f59e0b; r: 10; }
             .past-event { opacity: 0.6; }
             .time-label {
                 font-size: 32px;
@@ -95,295 +109,266 @@ class CorrectedTideChart {
         this.svg.innerHTML = '';
         this.svg.appendChild(style);
         
-        // Get tide events
-        const tideEvents = this.collectTideEvents();
-        console.log('🌊 Collected tide events:', tideEvents);
-        
-        // Generate tide path - FIXED: Use consistent coordinate system
-        const pathData = this.generateTidePath(tideEvents);
+        // Generate smooth tide curve
+        const pathData = this.generateSmoothTideCurve();
         
         if (pathData && !pathData.includes('NaN')) {
             const svgHeight = this.height * 9;
             
-            // FIXED: Use chartMapping width for fill path
-            const chartWidth = this.chartMapping ? this.chartMapping.chartWidth : 1440;
-            
-            // Create filled area
+            // Create filled area path
             const fillPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             fillPath.setAttribute('class', 'tide-fill');
-            fillPath.setAttribute('d', pathData + ` L${chartWidth},${svgHeight} L0,${svgHeight} Z`);
+            fillPath.setAttribute('d', pathData + ` L1440,${svgHeight} L0,${svgHeight} Z`);
             this.svg.appendChild(fillPath);
             
-            // Create tide curve
+            // Create tide curve path
             const curvePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             curvePath.setAttribute('class', 'tide-curve');
             curvePath.setAttribute('d', pathData);
             this.svg.appendChild(curvePath);
             
-            console.log('✅ Tide chart drawn with fixed coordinates');
+            console.log('✅ Smooth tide chart drawn successfully');
         } else {
-            console.warn('🌊 Invalid path data, using fallback');
+            console.warn('🌊 Using fallback chart');
             this.drawFallbackChart();
         }
         
-        // Add tide event markers - FIXED coordinates
-        this.drawTideEventMarkers(tideEvents);
+        // Add tide event markers
+        this.drawTideEventMarkers();
         
-        // Add current time indicator - FIXED coordinates
+        // Add current time indicator
         this.drawCurrentTimeIndicator();
     }
 
-    collectTideEvents() {
-        const tides = this.tideData.tides;
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        
-        if (!tides) return [];
-        
-        const events = [];
-        
-        // Helper to convert time string to minutes from midnight
-        const parseTimeToMinutes = (timeStr, timestampStr) => {
-            if (timestampStr) {
-                try {
-                    const date = new Date(timestampStr);
-                    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                    const dayOffset = Math.round((eventDate - todayStart) / (24 * 60 * 60 * 1000));
-                    return date.getHours() * 60 + date.getMinutes() + (dayOffset * 1440);
-                } catch (error) {
-                    console.warn('Error parsing timestamp:', timestampStr);
-                }
-            }
-            
-            // Fallback to time string parsing
-            const match = timeStr?.match(/(\d+):(\d+)\s*(AM|PM)/i);
-            if (match) {
-                let hours = parseInt(match[1]);
-                const minutes = parseInt(match[2]);
-                const ampm = match[3].toUpperCase();
-                
-                if (ampm === 'PM' && hours !== 12) hours += 12;
-                if (ampm === 'AM' && hours === 12) hours = 0;
-                
-                let totalMinutes = hours * 60 + minutes;
-                
-                // If this seems like tomorrow's event, add 24 hours
-                if (totalMinutes < currentMinutes && totalMinutes < 360) { // Before 6 AM
-                    totalMinutes += 1440;
-                }
-                
-                return totalMinutes;
-            }
-            
-            return null;
-        };
-        
-        // Collect all events
-        if (tides.previous_high) {
-            const minutes = parseTimeToMinutes(tides.previous_high.time, tides.previous_high.timestamp);
-            if (minutes !== null) {
-                events.push({
-                    minutes,
-                    height: tides.previous_high.height,
-                    type: 'high',
-                    time: tides.previous_high.time,
-                    isPast: minutes < currentMinutes
-                });
-            }
-        }
-        
-        if (tides.previous_low) {
-            const minutes = parseTimeToMinutes(tides.previous_low.time, tides.previous_low.timestamp);
-            if (minutes !== null) {
-                events.push({
-                    minutes,
-                    height: tides.previous_low.height,
-                    type: 'low',
-                    time: tides.previous_low.time,
-                    isPast: minutes < currentMinutes
-                });
-            }
-        }
-        
-        if (tides.next_high) {
-            const minutes = parseTimeToMinutes(tides.next_high.time, tides.next_high.timestamp);
-            if (minutes !== null) {
-                events.push({
-                    minutes,
-                    height: tides.next_high.height,
-                    type: 'high',
-                    time: tides.next_high.time,
-                    isPast: minutes < currentMinutes
-                });
-            }
-        }
-        
-        if (tides.next_low) {
-            const minutes = parseTimeToMinutes(tides.next_low.time, tides.next_low.timestamp);
-            if (minutes !== null) {
-                events.push({
-                    minutes,
-                    height: tides.next_low.height,
-                    type: 'low',
-                    time: tides.next_low.time,
-                    isPast: minutes < currentMinutes
-                });
-            }
-        }
-        
-        return events.sort((a, b) => a.minutes - b.minutes);
-    }
-
-    generateTidePath(events) {
+    generateSmoothTideCurve() {
+        const svgWidth = 1440; // 24 hours in minutes
         const svgHeight = this.height * 9;
         const verticalCenter = svgHeight / 2;
-        const amplitude = svgHeight * 0.3;
         
-        if (events.length === 0) {
-            return this.generateFallbackSineWave();
-        }
+        // Get tide parameters for smooth curve
+        const tideParams = this.calculateTideParameters();
         
-        // FIXED: End chart at last tide event to avoid plateau
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        let path = '';
         
-        // Find the range we want to show: from earliest event to latest event
-        const startMinute = Math.max(0, Math.min(...events.map(e => e.minutes)) - 60); // 1 hour before first event
-        const endMinute = Math.min(1440, Math.max(...events.map(e => e.minutes)) + 60); // 1 hour after last event
-        
-        // Ensure we always include current time in the range
-        const chartStart = Math.min(startMinute, currentMinutes - 180); // At least 3 hours before now
-        const chartEnd = Math.max(endMinute, currentMinutes + 360); // At least 6 hours after now
-        
-        console.log(`🎯 Chart range: ${chartStart} to ${chartEnd} minutes (${((chartEnd - chartStart) / 60).toFixed(1)} hours)`);
-        
-        // Update SVG viewBox to match our actual range
-        const chartWidth = chartEnd - chartStart;
-        this.svg.setAttribute('viewBox', `0 0 ${chartWidth} ${svgHeight}`);
-        
-        // Store mapping for markers and NOW line
-        this.chartMapping = {
-            startMinute: chartStart,
-            endMinute: chartEnd,
-            chartWidth: chartWidth,
-            mapTimeToX: (minute) => Math.max(0, Math.min(chartWidth, minute - chartStart))
-        };
-        
-        // Generate path only within our smart range
-        const startY = this.heightToY(this.interpolateTideHeight(chartStart, events), amplitude, verticalCenter);
-        let path = `M 0 ${startY.toFixed(1)}`;
-        
-        for (let minute = chartStart; minute <= chartEnd; minute += 3) {
-            const height = this.interpolateTideHeight(minute, events);
-            const y = this.heightToY(height, amplitude, verticalCenter);
-            const x = minute - chartStart; // Map to 0-based coordinate
+        // Generate smooth sinusoidal curve
+        for (let x = 0; x <= svgWidth; x += 2) {
+            const timeInHours = x / 60; // Convert minutes to hours
+            const height = this.calculateTideHeight(timeInHours, tideParams);
             
-            if (!isNaN(y) && isFinite(y)) {
+            // Convert tide height to SVG coordinates
+            const y = this.heightToSVG(height, verticalCenter, tideParams);
+            
+            if (x === 0) {
+                path = `M ${x} ${y.toFixed(1)}`;
+            } else {
                 path += ` L ${x} ${y.toFixed(1)}`;
             }
         }
         
         return path;
     }
-    
-    interpolateTideHeight(minute, events) {
-        if (events.length === 0) {
-            return this.tideData.current_height_ft || 2.0;
-        }
+
+    calculateTideParameters() {
+        const now = new Date();
+        const currentHour = now.getHours() + now.getMinutes() / 60;
+        const currentHeight = this.tideData.current_height_ft || 2.0;
         
-        // Find surrounding events
-        let beforeEvent = null;
-        let afterEvent = null;
+        // Get tide range and mid-point
+        let highHeight = 4.0;
+        let lowHeight = 0.5;
         
-        for (let i = 0; i < events.length; i++) {
-            if (events[i].minutes <= minute) {
-                beforeEvent = events[i];
-            }
-            if (events[i].minutes > minute && !afterEvent) {
-                afterEvent = events[i];
-                break;
-            }
-        }
-        
-        if (beforeEvent && afterEvent) {
-            // Cosine interpolation for smooth tide curves
-            const totalDuration = afterEvent.minutes - beforeEvent.minutes;
-            const elapsed = minute - beforeEvent.minutes;
-            const progress = elapsed / totalDuration;
+        const tides = this.tideData.tides;
+        if (tides) {
+            if (tides.next_high?.height) highHeight = tides.next_high.height;
+            if (tides.next_low?.height) lowHeight = tides.next_low.height;
             
-            const heightDiff = afterEvent.height - beforeEvent.height;
-            return beforeEvent.height + (heightDiff * (1 - Math.cos(progress * Math.PI)) / 2);
-        } else if (beforeEvent) {
-            return beforeEvent.height;
-        } else if (afterEvent) {
-            return afterEvent.height;
-        } else {
-            return this.tideData.current_height_ft || 2.0;
+            // Also check previous tides for better range estimation
+            if (tides.previous_high?.height) {
+                highHeight = Math.max(highHeight, tides.previous_high.height);
+            }
+            if (tides.previous_low?.height) {
+                lowHeight = Math.min(lowHeight, tides.previous_low.height);
+            }
         }
-    }
-    
-    heightToY(height, amplitude, verticalCenter) {
-        const heightRange = this.getTideRange();
-        const midHeight = this.getMidTideHeight();
-        const normalizedHeight = (height - midHeight) / heightRange;
         
-        // Higher tide = lower Y coordinate (top of chart)
-        return verticalCenter - (normalizedHeight * amplitude);
+        const amplitude = (highHeight - lowHeight) / 2;
+        const midHeight = (highHeight + lowHeight) / 2;
+        
+        // Calculate phase shift to match current conditions
+        let phaseShift = 0;
+        
+        // Try to match the current height and tide state
+        if (this.tideData.state) {
+            const state = this.tideData.state.toLowerCase();
+            
+            if (state.includes('high')) {
+                // At or near high tide
+                phaseShift = Math.PI / 2; // Peak of sine wave
+            } else if (state.includes('low')) {
+                // At or near low tide
+                phaseShift = -Math.PI / 2; // Trough of sine wave
+            } else if (state.includes('rising') || state.includes('flood')) {
+                // Rising tide - on upward slope
+                // Calculate where we are in the cycle based on current height
+                const normalizedHeight = (currentHeight - midHeight) / amplitude;
+                phaseShift = Math.asin(Math.max(-1, Math.min(1, normalizedHeight)));
+            } else if (state.includes('falling') || state.includes('ebb')) {
+                // Falling tide - on downward slope
+                const normalizedHeight = (currentHeight - midHeight) / amplitude;
+                phaseShift = Math.PI - Math.asin(Math.max(-1, Math.min(1, normalizedHeight)));
+            } else {
+                // Mid tide - calculate based on height
+                const normalizedHeight = (currentHeight - midHeight) / amplitude;
+                phaseShift = Math.asin(Math.max(-1, Math.min(1, normalizedHeight)));
+            }
+        }
+        
+        // Adjust phase to make current time match current height
+        const currentPhase = (currentHour * Math.PI) / 6.2; // ~12.4 hour cycle
+        phaseShift = phaseShift - currentPhase;
+        
+        return {
+            amplitude,
+            midHeight,
+            phaseShift,
+            period: 12.4, // Semi-diurnal tide (12.4 hours per cycle)
+            currentHeight,
+            highHeight,
+            lowHeight
+        };
     }
 
-    drawTideEventMarkers(events) {
+    calculateTideHeight(timeInHours, params) {
+        // Standard semi-diurnal tide formula
+        const phase = (timeInHours * 2 * Math.PI) / params.period + params.phaseShift;
+        return params.midHeight + params.amplitude * Math.sin(phase);
+    }
+
+    heightToSVG(tideHeight, verticalCenter, params) {
+        // Convert tide height to SVG Y coordinate
         const svgHeight = this.height * 9;
+        const maxAmplitude = svgHeight * 0.35; // Use more of the available space
+        
+        const normalizedHeight = (tideHeight - params.midHeight) / params.amplitude;
+        return verticalCenter - (normalizedHeight * maxAmplitude);
+    }
+
+    drawTideEventMarkers() {
+        const svgHeight = this.height * 9;
+        const tides = this.tideData.tides;
+        
+        if (!tides) return;
+        
         const now = new Date();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         
-        if (!this.chartMapping) {
-            console.warn('⚠️ No chart mapping available for markers');
-            return;
+        const events = [];
+        
+        // Helper to parse time strings
+        const parseTimeToMinutes = (timeString) => {
+            if (!timeString || typeof timeString !== 'string') return null;
+            
+            const match = timeString.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return null;
+            
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const ampm = match[3].toUpperCase();
+            
+            if (ampm === 'PM' && hours !== 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+            
+            return hours * 60 + minutes;
+        };
+        
+        // Add all tide events
+        if (tides.previous_high?.time) {
+            const minutes = parseTimeToMinutes(tides.previous_high.time);
+            if (minutes !== null) {
+                events.push({
+                    minutes,
+                    height: tides.previous_high.height,
+                    type: 'high',
+                    time: tides.previous_high.time,
+                    isPast: true
+                });
+            }
         }
         
-        events.forEach((event, index) => {
-            // FIXED: Use chart mapping for consistent coordinates
-            const xPosition = this.chartMapping.mapTimeToX(event.minutes);
+        if (tides.previous_low?.time) {
+            const minutes = parseTimeToMinutes(tides.previous_low.time);
+            if (minutes !== null) {
+                events.push({
+                    minutes,
+                    height: tides.previous_low.height,
+                    type: 'low',
+                    time: tides.previous_low.time,
+                    isPast: true
+                });
+            }
+        }
+        
+        if (tides.next_high?.time) {
+            const minutes = parseTimeToMinutes(tides.next_high.time);
+            if (minutes !== null) {
+                events.push({
+                    minutes,
+                    height: tides.next_high.height,
+                    type: 'high',
+                    time: tides.next_high.time,
+                    isPast: false
+                });
+            }
+        }
+        
+        if (tides.next_low?.time) {
+            let minutes = parseTimeToMinutes(tides.next_low.time);
+            if (minutes !== null) {
+                // Handle tomorrow's low tide
+                if (minutes < currentMinutes && minutes < 360) {
+                    minutes += 1440;
+                }
+                
+                events.push({
+                    minutes,
+                    height: tides.next_low.height,
+                    type: 'low',
+                    time: tides.next_low.time,
+                    isPast: false
+                });
+            }
+        }
+        
+        // Draw markers with better spacing
+        // events.forEach((event, index) => {
+        //     // const xPosition = Math.max(0, Math.min(1440, event.minutes));
             
-            // Skip if outside chart range
-            if (xPosition < 0 || xPosition > this.chartMapping.chartWidth) return;
+        //     // Create marker circle
+        //     // const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        //     // marker.setAttribute('class', `tide-marker ${event.type}-tide ${event.isPast ? 'past-event' : ''}`);
+        //     // marker.setAttribute('cx', xPosition);
+        //     // marker.setAttribute('cy', event.type === 'high' ? this.height * 1.5 : this.height * 7.5);
+        //     // this.svg.appendChild(marker);
             
-            // Calculate Y position on the curve
-            const height = event.height;
-            const amplitude = svgHeight * 0.3;
-            const verticalCenter = svgHeight / 2;
-            const yPosition = this.heightToY(height, amplitude, verticalCenter);
+        //     // Create label with smart positioning
+        //     // const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        //     // label.setAttribute('class', `tide-label ${event.isPast ? 'past-label' : ''}`);
+        //     // label.setAttribute('x', xPosition);
+        //     // label.setAttribute('text-anchor', 'middle');
             
-            // Create marker circle
-            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            marker.setAttribute('class', `tide-marker ${event.type}-tide ${event.isPast ? 'past-event' : ''}`);
-            marker.setAttribute('cx', xPosition);
-            marker.setAttribute('cy', yPosition);
-            this.svg.appendChild(marker);
+        //     // let labelY;
+        //     // if (event.type === 'high') {
+        //     //     labelY = 80 + (index % 2) * 50;
+        //     //     label.setAttribute('fill', event.isPast ? '#059669' : '#10b981');
+        //     // } else {
+        //     //     labelY = svgHeight - 50 - (index % 2) * 50;
+        //     //     label.setAttribute('fill', event.isPast ? '#d97706' : '#f59e0b');
+        //     // }
             
-            // Create label
-            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            label.setAttribute('class', `tide-label ${event.isPast ? 'past-label' : ''}`);
-            label.setAttribute('x', xPosition);
-            label.setAttribute('text-anchor', 'middle');
-            
-            // Position label above/below marker
-            const labelY = event.type === 'high' ? 
-                Math.max(60, yPosition - 40) : 
-                Math.min(svgHeight - 60, yPosition + 60);
-            
-            label.setAttribute('y', labelY);
-            label.setAttribute('fill', event.type === 'high' ? 
-                (event.isPast ? '#059669' : '#10b981') : 
-                (event.isPast ? '#d97706' : '#f59e0b'));
-            
-            const labelText = `${event.type === 'high' ? 'High' : 'Low'} ${event.time}`;
-            label.textContent = labelText;
-            this.svg.appendChild(label);
-            
-            console.log(`📍 Positioned ${labelText} at x=${xPosition.toFixed(0)} (mapped from ${event.minutes} min)`);
-        });
+        //     // label.setAttribute('y', labelY);
+        //     // label.textContent = `${event.type === 'high' ? 'High' : 'Low'} ${event.time}`;
+        //     // this.svg.appendChild(label);
+        // });
     }
 
     drawCurrentTimeIndicator() {
@@ -391,122 +376,67 @@ class CorrectedTideChart {
         const now = new Date();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         
-        if (!this.chartMapping) {
-            console.warn('⚠️ No chart mapping available for NOW line');
-            return;
-        }
-        
-        // FIXED: Use chart mapping for NOW line position
-        const nowXPosition = this.chartMapping.mapTimeToX(currentMinutes);
-        
-        // Only draw if NOW is within chart range
-        if (nowXPosition < 0 || nowXPosition > this.chartMapping.chartWidth) {
-            console.log(`🕐 NOW line (${currentMinutes} min) is outside chart range, skipping`);
-            return;
-        }
-        
-        console.log(`🕐 Drawing NOW line at x=${nowXPosition.toFixed(0)} (${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')})`);
-        
         // Create NOW line
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('class', 'current-time-line');
-        line.setAttribute('x1', nowXPosition);
+        line.setAttribute('x1', currentMinutes);
         line.setAttribute('y1', 0);
-        line.setAttribute('x2', nowXPosition);
+        line.setAttribute('x2', currentMinutes);
         line.setAttribute('y2', svgHeight);
         this.svg.appendChild(line);
         
-        // Create NOW label
-        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('class', 'time-label');
-        label.setAttribute('x', nowXPosition);
-        label.setAttribute('y', svgHeight / 2 - 20);
-        label.setAttribute('text-anchor', 'middle');
-        label.textContent = 'NOW';
-        this.svg.appendChild(label);
+        // Create time label
+        // const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
         
-        // Add time stamp
-        const timeLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        timeLabel.setAttribute('class', 'time-label');
-        timeLabel.setAttribute('x', nowXPosition);
-        timeLabel.setAttribute('y', svgHeight / 2 + 20);
-        timeLabel.setAttribute('text-anchor', 'middle');
-        timeLabel.setAttribute('font-size', '24');
-        timeLabel.textContent = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-        this.svg.appendChild(timeLabel);
-    }
-
-    getTideRange() {
-        const tides = this.tideData.tides;
-        if (tides?.cycle_info?.range_ft) {
-            return tides.cycle_info.range_ft;
-        }
+        // const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        // label.setAttribute('class', 'time-label');
+        // label.setAttribute('x', currentMinutes);
+        // label.setAttribute('y', svgHeight / 2 - 30);
+        // label.setAttribute('text-anchor', 'middle');
+        // label.textContent = 'NOW';
+        // this.svg.appendChild(label);
         
-        // Calculate from available data
-        let minHeight = Infinity;
-        let maxHeight = -Infinity;
+        // const timeLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        // timeLabel.setAttribute('class', 'time-label');
+        // timeLabel.setAttribute('x', currentMinutes);
+        // timeLabel.setAttribute('y', svgHeight / 2 + 10);
+        // timeLabel.setAttribute('text-anchor', 'middle');
+        // timeLabel.setAttribute('font-size', '24');
+        // timeLabel.textContent = timeString;
+        // this.svg.appendChild(timeLabel);
         
-        [tides?.previous_high, tides?.previous_low, tides?.next_high, tides?.next_low].forEach(tide => {
-            if (tide?.height !== undefined) {
-                minHeight = Math.min(minHeight, tide.height);
-                maxHeight = Math.max(maxHeight, tide.height);
-            }
-        });
-        
-        return minHeight !== Infinity ? maxHeight - minHeight : 4;
-    }
-
-    getMidTideHeight() {
-        const tides = this.tideData.tides;
-        let minHeight = Infinity;
-        let maxHeight = -Infinity;
-        
-        [tides?.previous_high, tides?.previous_low, tides?.next_high, tides?.next_low].forEach(tide => {
-            if (tide?.height !== undefined) {
-                minHeight = Math.min(minHeight, tide.height);
-                maxHeight = Math.max(maxHeight, tide.height);
-            }
-        });
-        
-        return minHeight !== Infinity ? (maxHeight + minHeight) / 2 : 2;
-    }
-
-    generateFallbackSineWave() {
-        const svgHeight = this.height * 9;
-        const verticalCenter = svgHeight / 2;
-        const amplitude = svgHeight * 0.25;
-        
-        let path = `M 0 ${verticalCenter}`;
-        
-        for (let x = 0; x <= 1440; x += 5) {
-            // Two tide cycles per day
-            const y = verticalCenter + amplitude * Math.sin((x / 1440) * Math.PI * 4);
-            path += ` L ${x} ${y.toFixed(1)}`;
-        }
-        
-        return path;
+        // console.log(`🕐 NOW line positioned at ${currentMinutes}: ${timeString}`);
+        // console.log(`🌊 Tide state: ${this.tideData.state} - Smooth curve generated`);
     }
 
     drawFallbackChart() {
-        const path = this.generateFallbackSineWave();
         const svgHeight = this.height * 9;
+        const svgWidth = 1440;
+        const verticalCenter = svgHeight / 2;
+        const amplitude = svgHeight * 0.3;
         
-        // Create the curve
+        let path = `M 0 ${verticalCenter}`;
+        
+        for (let x = 0; x <= svgWidth; x += 3) {
+            // Two complete tide cycles per day
+            const y = verticalCenter + amplitude * Math.sin((x / svgWidth) * Math.PI * 4 - Math.PI);
+            path += ` L ${x} ${y.toFixed(1)}`;
+        }
+        
         const curvePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         curvePath.setAttribute('class', 'tide-curve');
         curvePath.setAttribute('d', path);
         this.svg.appendChild(curvePath);
         
-        // Fill below curve
         const fillPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         fillPath.setAttribute('class', 'tide-fill');
-        fillPath.setAttribute('d', path + ` L1440,${svgHeight} L0,${svgHeight} Z`);
+        fillPath.setAttribute('d', path + ` L${svgWidth},${svgHeight} L0,${svgHeight} Z`);
         this.svg.appendChild(fillPath);
     }
 
     updateWithData(newTideData) {
         this.tideData = { ...this.tideData, ...newTideData };
-        console.log('🔄 Updating SVG tide chart with new data');
+        console.log('🌊 Updating smooth tide chart with new data');
         this.drawChart();
     }
 
@@ -525,4 +455,4 @@ class CorrectedTideChart {
     }
 }
 
-console.log('🌊 ACTUALLY FIXED SVG tide chart - simple 1:1 coordinate mapping!');
+console.log('🌊 Smooth tide chart loaded - Natural sinusoidal curves!');
