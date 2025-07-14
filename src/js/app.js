@@ -91,11 +91,11 @@ class SurfApp {
         }
         
         // Update all UI elements with placeholder data
-        this.updateRating();
+        // this.updateRating();
         this.updateWeatherCard();
         this.updateTideCard();
         this.updateDetails();
-        this.updateElement('timestamp', this.formatTimestamp(new Date().toISOString()));
+        // this.updateElement('timestamp', this.formatTimestamp(new Date().toISOString()));
     }
 
     async registerServiceWorker() {
@@ -305,11 +305,11 @@ class SurfApp {
     updateUIWithTransitions() {
         // Update main elements with fade effect
         this.updateElementWithTransition('location', this.surfData.location);
-        this.updateElementWithTransition('timestamp', this.formatTimestamp(this.surfData.timestamp));
+        // this.updateElementWithTransition('timestamp', this.formatTimestamp(this.surfData.timestamp));
         this.updateElementWithTransition('duration', this.surfData.goodSurfDuration);
 
         // Update rating with special handling
-        this.updateRatingWithTransition();
+        // this.updateRatingWithTransition();
         
         // Update cards
         this.updateWeatherCard();
@@ -332,26 +332,26 @@ class SurfApp {
         }, 150);
     }
 
-    updateRatingWithTransition() {
-        const rating = document.getElementById('rating');
-        if (!rating) return;
+    // updateRatingWithTransition() {
+    //     const rating = document.getElementById('rating');
+    //     if (!rating) return;
 
-        // Fade out with Tailwind classes
-        rating.classList.add('transition-all', 'duration-300', 'opacity-70', 'scale-95');
+    //     // Fade out with Tailwind classes
+    //     rating.classList.add('transition-all', 'duration-300', 'opacity-70', 'scale-95');
         
-        setTimeout(() => {
-            // Update content and class
-            rating.textContent = this.surfData.rating;
+    //     setTimeout(() => {
+    //         // Update content and class
+    //         rating.textContent = this.surfData.rating;
             
-            // Remove old rating classes and add new ones
-            rating.className = rating.className.replace(/\b(excellent|good|marginal|poor)\b/g, '');
-            rating.classList.add(this.surfData.rating.toLowerCase());
+    //         // Remove old rating classes and add new ones
+    //         rating.className = rating.className.replace(/\b(excellent|good|marginal|poor)\b/g, '');
+    //         rating.classList.add(this.surfData.rating.toLowerCase());
             
-            // Fade back in
-            rating.classList.remove('opacity-70', 'scale-95');
-            rating.classList.add('opacity-100', 'scale-100');
-        }, 150);
-    }
+    //         // Fade back in
+    //         rating.classList.remove('opacity-70', 'scale-95');
+    //         rating.classList.add('opacity-100', 'scale-100');
+    //     }, 150);
+    // }
 
     markDataAsStale() {
         // Add visual indicator that data is stale/offline
@@ -454,15 +454,15 @@ updateTideVisualization() {
         }
     }
 
-    updateRating() {
-        const rating = document.getElementById('rating');
-        if (rating) {
-            rating.textContent = this.surfData.rating;
-            // Remove existing rating classes and add new one
-            rating.className = rating.className.replace(/\b(excellent|good|marginal|poor)\b/g, '');
-            rating.classList.add(this.surfData.rating.toLowerCase());
-        }
-    }
+    // updateRating() {
+    //     const rating = document.getElementById('rating');
+    //     if (rating) {
+    //         rating.textContent = this.surfData.rating;
+    //         // Remove existing rating classes and add new one
+    //         rating.className = rating.className.replace(/\b(excellent|good|marginal|poor)\b/g, '');
+    //         rating.classList.add(this.surfData.rating.toLowerCase());
+    //     }
+    // }
 
     updateWeatherCard() {
         if (!this.surfData.weather) return;
